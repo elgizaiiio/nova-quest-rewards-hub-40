@@ -129,21 +129,7 @@ const AuthPage = () => {
   const invokeAuth = (body: Record<string, unknown>) =>
     invokeFunction("openrouter-media", { body: { kind: "auth", ...body } });
 
-  // Referral code — auto-fill from ?ref= query or from localStorage (captured at /ref/:code)
-  const [referralCode, setReferralCode] = useState<string>(() => {
-    try {
-      const fromQuery = searchParams.get("ref");
-      if (fromQuery) return fromQuery.trim().toUpperCase().slice(0, 64);
-      const raw = localStorage.getItem("megsy_referral_code");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.code && typeof parsed.code === "string") {
-          return parsed.code.trim().toUpperCase().slice(0, 64);
-        }
-      }
-    } catch {}
-    return "";
-  });
+  const [referralCode, setReferralCode] = useState<string>("");
   const [showReferralField, setShowReferralField] = useState<boolean>(!!referralCode);
 
   useEffect(() => forceDarkTheme(), []);
@@ -622,9 +608,6 @@ const AuthPage = () => {
         } catch {}
       }
 
-      try {
-        localStorage.removeItem("megsy_referral_code");
-      } catch {}
       toast.success(authT("accountCreated"));
       if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
       else navigate(pathForZone("/chat", window.location.pathname));

@@ -112,30 +112,6 @@ const clearUserCaches = () => {
   keysToRemove.forEach((k) => localStorage.removeItem(k));
 };
 
-/** Claim a pending referral bonus once the user is authenticated. */
-const claimPendingReferral = async () => {
-  let storedCode = "";
-  try {
-    const raw = localStorage.getItem("megsy_referral_code");
-    if (!raw) return;
-    try {
-      storedCode = (JSON.parse(raw)?.code || "").toString();
-    } catch {
-      storedCode = raw;
-    }
-  } catch {
-    return;
-  }
-  if (!storedCode) return;
-  try {
-    const { data } = await supabase.rpc("claim_referral_signup", { p_code: storedCode });
-    const result = data as { ok?: boolean; error?: string } | null;
-    if (result?.ok || (result?.error && result.error !== "email_not_confirmed")) {
-      localStorage.removeItem("megsy_referral_code");
-    }
-  } catch {}
-};
-
 const useAuthSession = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -153,9 +129,6 @@ const useAuthSession = () => {
         clearUserCaches();
       }
 
-      if (userId && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
-        void claimPendingReferral();
-      }
 
       // TikTok funnel: CompleteRegistration, once per account, only for an
       // account created in the last 10 minutes (a real sign-up, not a login).

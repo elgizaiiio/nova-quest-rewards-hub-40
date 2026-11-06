@@ -14,7 +14,6 @@ import {
   MfaChallengePage,
   DeleteAccountPage,
   AcceptInvitePage,
-  ReferralRedirectPage,
   LegalDocPage,
   DocsPage,
   AgentHubPage,
@@ -46,8 +45,6 @@ export const AppRoutes = (_props: { currentUserId: string | null }) => (
       <Route path="/oauth/authorize" element={<OAuthAuthorizePage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/invite/:token" element={<AcceptInvitePage />} />
-      <Route path="/ref/:code" element={<ReferralRedirectPage />} />
-      <Route path="/r/:code" element={<ReferralRedirectPage />} />
       <Route path="/settings/change-email" element={guard(<ChangeEmailPage />)} />
       <Route path="/settings/change-password" element={guard(<ChangePasswordPage />)} />
       <Route path="/settings/two-factor" element={guard(<TwoFactorPage />)} />
