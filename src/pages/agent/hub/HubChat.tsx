@@ -186,10 +186,6 @@ function Composer({
         />
         {text.trim() || files.length ? (
           <button type="button" className="cx-circle cx-send" aria-label="Send" onClick={submit}><ArrowUp size={18} /></button>
-        ) : running ? (
-          <button type="button" className="cx-circle" aria-label="Stop" onClick={onStop} disabled={stopping}>
-            {stopping ? <Loader2 size={16} className="animate-spin" /> : <Square size={12} fill="currentColor" />}
-          </button>
         ) : (
           <>
             <button type="button" className="cx-circle cx-mic" data-active={listening} aria-label="Voice" onClick={listen}><Mic size={18} /></button>

@@ -98,13 +98,26 @@ async function startReply(sessionId: string) {
     } finally {
       if (running.get(sessionId) === live) running.delete(sessionId);
     }
+    // A message sent in the last moment of a run may have missed it: answer it now.
+    if (!live.ctl.signal.aborted && !running.has(sessionId)) {
+      const { data: last } = await db.from("messages").select("role").eq("conversation_id", sessionId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (last?.role === "user") void startReply(sessionId);
+    }
   })();
 }
 
 async function addUserMessage(sessionId: string, text: string, images: string[] = []) {
   const user = await uid();
-  const { error } = await db.from("messages").insert({ conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } });
+  const { data, error } = await db.from("messages").insert({ conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } }).select("id, created_at").single();
   if (error) fail(error);
+  const live = running.get(sessionId);
+  if (live) {
+    // The bot is still working: it reads this message mid-run and changes course.
+    const e: RawEvent = { id: data.id, type: "user.message", at: data.created_at, content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))] };
+    live.events.push(e);
+    live.subs.forEach((f) => f(e));
+    return;
+  }
   await startReply(sessionId);
 }
 

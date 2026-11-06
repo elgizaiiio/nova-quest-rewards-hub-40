@@ -24,15 +24,32 @@ export const Route = createFileRoute("/api/ceyo-chat")({
         const { data: bot } = conv.bot_id
           ? await db.from("bots").select("id, name, instructions").eq("id", conv.bot_id).maybeSingle()
           : { data: null };
-        const { data: rows } = await db.from("messages").select("role, content").eq("conversation_id", conv.id)
+        const { data: rows } = await db.from("messages").select("role, content, created_at").eq("conversation_id", conv.id)
           .order("created_at", { ascending: false }).limit(30);
         const history = (rows ?? []).reverse().filter((m) => m.content).map((m) => ({
           role: m.role === "assistant" ? "assistant" : "user", content: m.content,
         }));
+        let lastSeen = rows?.[0]?.created_at ?? new Date(0).toISOString();
+        const poll = async () => {
+          const { data } = await db.from("messages").select("content, created_at").eq("conversation_id", conv.id)
+            .eq("role", "user").gt("created_at", lastSeen).order("created_at");
+          if (data?.length) lastSeen = data[data.length - 1].created_at;
+          return (data ?? []).map((m) => m.content).filter(Boolean);
+        };
         const system = [
-          `You are ${bot?.name || "a helpful assistant"}, a personal AI bot.`,
-          bot?.instructions || "",
-          "Answer fast and clearly in the user's language. Use web_search and read_url when fresh or external facts are needed. Today is " + new Date().toDateString() + ".",
+          `Your name is ${bot?.name || "Sam"}. You are the user's close friend chatting with them in a messaging app.`,
+          bot?.instructions ? `About you:\n${bot.instructions}` : "",
+          [
+            "How you talk:",
+            "- Talk like a real friend texting: warm, casual, short. Usually 1-3 sentences.",
+            "- Reply in the exact language and dialect the user writes in (e.g. Egyptian Arabic stays Egyptian).",
+            "- Never say you are an AI, a model, an assistant or a bot, and never mention tools, searching or browsing. Just know things.",
+            "- No headings, no bullet lists, no bold, no formal phrases like 'Certainly!' or 'I'd be happy to help'. Plain chat text only, unless they ask for code or a list.",
+            "- An emoji now and then is fine, never forced. Ask a short follow-up question when it feels natural.",
+            "- If the user sends new messages while you are working, adjust to them right away. If they tell you to stop or drop it, stop and reply with a quick casual ok.",
+            "- Use web_search and read_url silently whenever fresh or outside facts help.",
+            "Today is " + new Date().toDateString() + ".",
+          ].join("\n"),
         ].filter(Boolean).join("\n\n");
 
         const enc = new TextEncoder();
@@ -48,7 +65,7 @@ export const Route = createFileRoute("/api/ceyo-chat")({
             let text = "";
             let failed = "";
             try {
-              text = await runAgentLoop(system, history, emit, request.signal);
+              text = await runAgentLoop(system, history, emit, request.signal, poll);
             } catch (e) {
               failed = e instanceof Error ? e.message : "Something went wrong";
               if (!request.signal.aborted) emit({ id: `${rid}-err`, type: "session.error", message: failed });

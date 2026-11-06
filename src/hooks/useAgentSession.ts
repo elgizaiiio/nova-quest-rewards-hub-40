@@ -101,10 +101,10 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
   /** While running, messages wait in the queue and go out automatically when the agent finishes. */
   const send = useCallback(
     (text: string, images: string[] = []) => {
-      if (running) setQueue((q) => [...q, { id: crypto.randomUUID(), text, images }]);
-      else void sendNow(text, images);
+      // Messages sent while the bot works go straight in and steer the same run.
+      void sendNow(text, images);
     },
-    [running, sendNow],
+    [sendNow],
   );
 
   useEffect(() => {
