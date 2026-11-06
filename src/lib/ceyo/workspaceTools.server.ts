@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { botInput, groupInput, delegationInput, actionInput, tool, type AgentTool } from "./toolSchemas";
+import { botInput, groupInput, teamInput, delegationInput, actionInput, tool, type AgentTool } from "./toolSchemas";
 import { accounts, findTools, ownedAccount } from "./composio.server";
 import { runAgentLoop, type LoopEvent } from "./agentLoop.server";
 import { agentPrompt } from "./prompt";
@@ -15,7 +15,19 @@ export function workspaceTools(ctx: Context): AgentTool[] {
   const add = (name: string, description: string, props: object, required: string[], run: AgentTool["run"]) => list.push({ name, def: tool(name, description, props, required), run });
   add("list_my_bots", "List your user's real bots, specializations and groups.", {}, [], async () => JSON.stringify({ bots: checked(await db.from("bots").select("id,name,description,instructions").eq("owner_id", userId)), groups: checked(await db.from("bot_groups").select("id,name,coordinator_id,bot_group_members(bot_id)").eq("owner_id", userId)) }));
   if (ctx.primary) {
-    add("create_bot", "Create a real specialist bot when the user asks for a new bot or team.", { name: str, description: str, instructions: str, color: { type: "string", enum: ["aurora", "ocean", "ember", "mint", "sun", "rose", "mono"] } }, ["name", "instructions"], async (args) => {
+    add("create_team", "Create a complete work group in one step: its specialist members and the group itself. Use this whenever the user asks for a team or group; never create the members separately first.", { name: str, category: str, members: { type: "array", minItems: 2, maxItems: 8, items: { type: "object", properties: { name: { type: "string", description: "Short job title in the user's language, e.g. Researcher, Writer, Editor. Never contains the word bot." }, description: str, instructions: str, color: { type: "string", enum: ["aurora", "ocean", "ember", "mint", "sun", "rose", "mono"] } }, required: ["name", "instructions"] } } }, ["name", "members"], async (args) => {
+      const input = teamInput.parse(args);
+      const palette = ["ocean", "ember", "mint", "sun", "aurora", "mono", "rose"] as const;
+      const created = checked(await db.from("bots").insert(input.members.map((m, i) => ({ owner_id: userId, name: m.name, description: m.description, instructions: m.instructions, model: "gpt-oss-120b", look: { color: m.color || palette[i % palette.length] } }))).select("id,name,description"));
+      const ids = created.map((b: any) => b.id);
+      const cleanup = async (extra: string[] = []) => { await db.from("bots").delete().in("id", [...ids, ...extra]).eq("owner_id", userId); };
+      const coordinator = await db.from("bots").insert({ owner_id: userId, name: input.name, description: `${created.length} coordinated members`, instructions: `Coordinate the group ${input.name}. Delegate actual work, never impersonate members. Members: ${JSON.stringify(created)}`, look: { color: "rose" } }).select("id").single();
+      if (coordinator.error) { await cleanup(); throw new Error(coordinator.error.message); }
+      const group = await db.rpc("save_bot_group", { p_name: input.name, p_coordinator: coordinator.data.id, p_members: ids, p_category: input.category });
+      if (group.error) { await cleanup([coordinator.data.id]); throw new Error(group.error.message); }
+      return JSON.stringify({ group: { id: group.data.id, name: input.name }, members: created });
+    });
+    add("create_bot", "Create one real specialist bot (not for teams; use create_team for groups). Name it after its job, never with the word bot.", { name: str, description: str, instructions: str, color: { type: "string", enum: ["aurora", "ocean", "ember", "mint", "sun", "rose", "mono"] } }, ["name", "instructions"], async (args) => {
       const input = botInput.parse(args);
       return JSON.stringify(checked(await db.from("bots").insert({ owner_id: userId, name: input.name, description: input.description, instructions: input.instructions, model: "gpt-oss-120b", look: { color: input.color } }).select("id,name,description").single()));
     });
@@ -24,8 +36,9 @@ export function workspaceTools(ctx: Context): AgentTool[] {
       if (input.bot_id === ctx.botId) throw new Error("Use a specialist bot for this role");
       return JSON.stringify(checked(await db.from("bots").update({ instructions: input.instructions, ...(input.description ? { description: input.description } : {}) }).eq("id", input.bot_id).eq("owner_id", userId).select("id,name,instructions").single()));
     });
-    add("create_bot_group", "Create a real work group from 2 to 8 existing user-owned specialist bots.", { name: str, member_ids: { type: "array", items: str }, category: str }, ["name", "member_ids"], async (args) => {
+    add("create_bot_group", "Group 2 to 8 bots that already exist. For a brand-new team use create_team instead.", { name: str, member_ids: { type: "array", items: str }, category: str }, ["name", "member_ids"], async (args) => {
       const input = groupInput.parse(args);
+      if (/bot/i.test(input.name)) throw new Error("Name the group after its purpose, without the word bot");
       const members = checked(await db.from("bots").select("id,name,instructions").eq("owner_id", userId).in("id", input.member_ids));
       if (members.length !== input.member_ids.length) throw new Error("Every bot must belong to this user");
       const coordinator = checked(await db.from("bots").insert({ owner_id: userId, name: input.name, description: `${members.length} coordinated bots`, instructions: `Coordinate the group ${input.name}. Delegate actual work, never impersonate members. Members: ${JSON.stringify(members)}`, look: { color: "rose" } }).select("id").single());
