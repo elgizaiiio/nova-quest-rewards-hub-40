@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as ApiAnythingRouteImport } from './routes/api/anything'
 import { Route as ApiCeyoChatRouteImport } from './routes/api/ceyo-chat'
+import { Route as ApiCeyoTaskRouteImport } from './routes/api/ceyo-task'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiClerkRouteImport } from './routes/api/clerk'
 import { Route as ApiComputerAgentRouteImport } from './routes/api/computer-agent'
@@ -53,6 +54,11 @@ const ApiAnythingRoute = ApiAnythingRouteImport.update({
 const ApiCeyoChatRoute = ApiCeyoChatRouteImport.update({
   id: '/api/ceyo-chat',
   path: '/api/ceyo-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCeyoTaskRoute = ApiCeyoTaskRouteImport.update({
+  id: '/api/ceyo-task',
+  path: '/api/ceyo-task',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
   '/api/ceyo-chat': typeof ApiCeyoChatRoute
+  '/api/ceyo-task': typeof ApiCeyoTaskRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
   '/api/ceyo-chat': typeof ApiCeyoChatRoute
+  '/api/ceyo-task': typeof ApiCeyoTaskRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
   '/api/ceyo-chat': typeof ApiCeyoChatRoute
+  '/api/ceyo-task': typeof ApiCeyoTaskRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/api/anything'
     | '/api/ceyo-chat'
+    | '/api/ceyo-task'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/api/anything'
     | '/api/ceyo-chat'
+    | '/api/ceyo-task'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/api/anything'
     | '/api/ceyo-chat'
+    | '/api/ceyo-task'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -335,6 +347,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute
   ApiAnythingRoute: typeof ApiAnythingRoute
   ApiCeyoChatRoute: typeof ApiCeyoChatRoute
+  ApiCeyoTaskRoute: typeof ApiCeyoTaskRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiClerkRoute: typeof ApiClerkRoute
   ApiComputerAgentRoute: typeof ApiComputerAgentRoute
@@ -386,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ceyo-chat'
       fullPath: '/api/ceyo-chat'
       preLoaderRoute: typeof ApiCeyoChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ceyo-task': {
+      id: '/api/ceyo-task'
+      path: '/api/ceyo-task'
+      fullPath: '/api/ceyo-task'
+      preLoaderRoute: typeof ApiCeyoTaskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -543,6 +563,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   ApiAnythingRoute: ApiAnythingRoute,
   ApiCeyoChatRoute: ApiCeyoChatRoute,
+  ApiCeyoTaskRoute: ApiCeyoTaskRoute,
   ApiChatRoute: ApiChatRoute,
   ApiClerkRoute: ApiClerkRoute,
   ApiComputerAgentRoute: ApiComputerAgentRoute,
