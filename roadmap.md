@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Fix old chat loading character and keep sent messages visible during history refreshes.
+
 - [x] Make the signed-in home a Grok-style bot/group hub with the existing animated characters.
 - [x] Add bot/group creation, categories, hidden chats, global search, profiles and editing while preserving real agent chats.
 - [x] Verify the new hub on mobile/desktop and run seven targeted tests; authenticated end-to-end coverage remains limited by the external unmanaged backend.
