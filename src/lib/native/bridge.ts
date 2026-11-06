@@ -1,7 +1,7 @@
 /** @doc Bridge to the Ceyo Android app (WebView JavascriptInterface `MegsyAndroid`).
  *  Real alarms/reminders are scheduled on the phone; the push token is stored per user.
  *  See docs/android-bridge.md for the native side. No-ops in a normal browser. */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 
 type NativeApi = {
   scheduleAlarm?: (json: string) => void;

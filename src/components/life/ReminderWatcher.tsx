@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { bootNativeBridge } from "@/lib/native/bridge";
 
 export default function ReminderWatcher() {

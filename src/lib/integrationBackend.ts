@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import type { Integration } from "@/lib/integrationsData";
 import { listToolApps } from "@/lib/pipedream/client";
 

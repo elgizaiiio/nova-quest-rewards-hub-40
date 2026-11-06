@@ -1,7 +1,7 @@
 /** @doc Set up and manage two-factor authentication. */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { toast } from "sonner";
 import { Shield, ShieldCheck, Copy, Check, ChevronLeft } from "lucide-react";
 import { sanitizeErrorMessage } from "@/lib/sanitizeError";

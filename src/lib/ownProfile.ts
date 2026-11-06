@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 
 /**
  * Single-flight cache for the signed-in user's own `profiles` row.

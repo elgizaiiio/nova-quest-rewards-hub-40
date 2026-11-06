@@ -6,7 +6,7 @@
  * beyond one anonymous id in localStorage, and no personal data — just enough to
  * answer "how many visitors, which pages, how long" in the admin Telegram bot.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 
 const VISITOR_KEY = "megsy_visitor_id";
 
