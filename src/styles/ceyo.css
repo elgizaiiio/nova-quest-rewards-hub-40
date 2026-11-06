@@ -234,13 +234,11 @@
 .gx-colors{grid-template-columns:repeat(6,20px)!important;gap:16px 26px!important}
 .gx-colors button{width:20px!important;height:20px!important}
 .gx-colors button[data-active="true"]{outline-offset:3px}
-.gx-create,.ceyo-page,.gx-sheet,.hub-search-overlay{animation:ceyo-sheet-up .34s cubic-bezier(.22,.9,.28,1) both}
-@keyframes ceyo-sheet-up{from{transform:translateY(100%)}to{transform:none}}
+.gx-sheet{animation:cx-sheet-in .34s cubic-bezier(.22,.9,.28,1) both}
 @media (prefers-reduced-motion:reduce){.gx-create,.ceyo-page,.gx-sheet,.hub-search-overlay{animation:none}}
 .gx-colors{grid-template-columns:repeat(6,12px)!important;gap:26px 40px!important;padding-bottom:24px}
 .gx-colors button{width:12px!important;height:12px!important}
 .gx-colors button[data-active="true"]{outline:1.5px solid #fff!important;outline-offset:4px}
-.agent-hub.ceyo-page,.gx-apps,.gx-create,.hub-search-overlay{animation:ceyo-sheet-up .34s cubic-bezier(.22,.9,.28,1) both!important}
 
 /* Settings sheets: a fixed viewport shell with one genuinely scrollable body. */
 .agent-hub.ceyo-page{
@@ -368,11 +366,12 @@ html[data-ceyo-surface="bot"] .agent-hub.ceyo-page{--ceyo-page-bg:#1b1b20;--ceyo
 
 
 /* ===== Page transitions: soft native rise instead of a full-height jump ===== */
-@keyframes ceyo-sheet-up{from{opacity:0;transform:translate3d(0,26px,0)}to{opacity:1;transform:none}}
+@keyframes ceyo-sheet-up{from{opacity:0}to{opacity:1}}
+@keyframes ceyo-page-in{from{opacity:0}to{opacity:1}}
 @keyframes cx-fade{from{opacity:0}to{opacity:1}}
 @keyframes cx-sheet-in{from{transform:translate3d(0,100%,0)}to{transform:none}}
 @keyframes cx-pop-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
-.agent-hub.ceyo-page,.gx-apps,.gx-create,.hub-search-overlay,.cx-chat,.cx-sub{animation:ceyo-sheet-up .3s cubic-bezier(.16,1,.3,1) both!important;will-change:transform,opacity}
+.agent-hub.ceyo-page,.gx-apps,.gx-create,.hub-search-overlay,.cx-chat,.cx-sub{animation:ceyo-page-in .18s ease-out both!important;transform:none}
 @media (prefers-reduced-motion:reduce){.agent-hub.ceyo-page,.gx-apps,.gx-create,.hub-search-overlay,.cx-chat,.cx-sub,.cx-sheet,.cx-pop{animation:none!important}}
 
 /* ===== Chat ===== */
