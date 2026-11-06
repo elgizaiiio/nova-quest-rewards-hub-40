@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/ceyo-chat")({
             if (text || !failed) {
               await db.from("messages").insert({
                 conversation_id: conv.id, user_id: u.user!.id, role: "assistant", bot_id: conv.bot_id,
-                content: text, metadata: { events: events.filter((x) => x.type.startsWith("agent.tool")) } as never,
+                content: text.trim(), metadata: { events: events.filter((x) => x.type.startsWith("agent.tool")) } as never,
               });
               await db.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conv.id);
             }
