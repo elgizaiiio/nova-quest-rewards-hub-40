@@ -111,14 +111,15 @@ async function addUserMessage(sessionId: string, text: string, images: string[] 
   const { data, error } = await db.from("messages").insert({ conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } }).select("id, created_at").single();
   if (error) fail(error);
   const live = running.get(sessionId);
+  const e: RawEvent = { id: data.id, type: "user.message", at: data.created_at, content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))] };
   if (live) {
     // The bot is still working: it reads this message mid-run and changes course.
-    const e: RawEvent = { id: data.id, type: "user.message", at: data.created_at, content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))] };
     live.events.push(e);
     live.subs.forEach((f) => f(e));
-    return;
+    return e;
   }
   await startReply(sessionId);
+  return e;
 }
 
 /* Background jobs: check unfinished ones and tell open chats when a result lands. */
