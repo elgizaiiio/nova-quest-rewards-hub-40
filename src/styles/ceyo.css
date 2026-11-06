@@ -438,6 +438,9 @@ html[data-ceyo-surface="bot"] .agent-hub.ceyo-page{--ceyo-page-bg:#1b1b20;--ceyo
 .cx-working-text{display:flex;align-items:baseline;gap:6px}
 .cx-working-text b{color:#e5e5e7;font-weight:600;font-size:15px}
 .cx-shimmer{background:linear-gradient(90deg,#6e6e73 0%,#6e6e73 40%,#d1d1d6 50%,#6e6e73 60%,#6e6e73 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:cx-shimmer 1.8s linear infinite}
+/* label text swaps in place without moving the loader */
+.cx-label-swap{animation:cx-shimmer 1.8s linear infinite,cx-label-in .28s ease-out}
+@keyframes cx-label-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 @keyframes cx-shimmer{from{background-position:100% 0}to{background-position:-150% 0}}
 .cx-latest{position:sticky;bottom:12px;float:right;margin:-56px 16px 0 0;z-index:5}
 [dir="rtl"] .cx-latest{float:left;margin:-56px 0 0 16px}
