@@ -14,7 +14,6 @@ export const TwoFactorPage = lazy(() => import("@/pages/auth/TwoFactorPage"));
 export const MfaChallengePage = lazy(() => import("@/pages/auth/MfaChallengePage"));
 export const DeleteAccountPage = lazy(() => import("@/pages/auth/DeleteAccountPage"));
 export const AcceptInvitePage = lazy(() => import("@/pages/auth/AcceptInvitePage"));
-export const ReferralRedirectPage = lazy(() => import("@/pages/auth/ReferralRedirectPage"));
 export const LegalDocPage = lazy(() => import("@/pages/legal/LegalDocPage"));
 export const DocsPage = lazy(() => import("@/pages/docs/DocsPage"));
 export const AgentHubPage = lazy(() => import("@/pages/agent/AgentHubPage"));
