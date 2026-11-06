@@ -24,7 +24,7 @@ describe("chat message continuity", () => {
     expect(result.current.turns.filter((t) => t.type === "user").map((t) => t.text)).toEqual(["Keep this message"]);
     await act(async () => { mocks.changed?.("chat-1"); });
     expect(result.current.turns.filter((t) => t.type === "user").map((t) => t.text)).toEqual(["Keep this message"]);
-    const saved: RawEvent = { id: "saved-1", type: "user.message", content: [{ type: "text", text: "Keep this message" }] };
+    const saved: RawEvent = { id: mocks.send.mock.calls[0][3], type: "user.message", content: [{ type: "text", text: "Keep this message" }] };
     await act(async () => { finish?.(saved); });
     mocks.events.mockResolvedValue({ events: [saved], status: "idle" });
     await act(async () => { mocks.changed?.("chat-1"); });
