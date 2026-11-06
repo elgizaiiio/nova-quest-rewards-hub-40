@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 
 /**
  * The user's real plan can live in `subscriptions` (an active paid subscription)

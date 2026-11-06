@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { useActiveWorkspaceId, WORKSPACE_CHANGED_EVENT } from "@/lib/activeWorkspace";
 import { getCachedUser } from "@/lib/cachedUser";
 import { getOwnProfile, invalidateOwnProfile } from "@/lib/ownProfile";

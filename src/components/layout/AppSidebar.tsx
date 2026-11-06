@@ -3,7 +3,7 @@ import { memo, startTransition, useEffect, useMemo, useState, useCallback } from
 import { useNavigate, useLocation, type NavigateOptions } from "react-router-dom";
 import { SquarePlus, PanelLeft, LogIn, Cloud, Sparkles, ChevronDown, Mail as MailIcon, X, Cog, Search } from "lucide-react";
 import { AgentOrb } from "@/components/agent/AgentOrb";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { getUserSafe } from "@/lib/authSafe";
 import { getOwnProfile } from "@/lib/ownProfile";
 

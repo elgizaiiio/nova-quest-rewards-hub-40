@@ -7,7 +7,7 @@ import {
   ArrowUpRight, Check, ChevronLeft, ChevronRight, ChevronsUpDown, Contrast, Copy, CreditCard,
   KeyRound, Moon, Plus, Search, Smartphone, Sun, Trash2, User, Vault, X,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { useCredits } from "@/hooks/useCredits";
 import { getStoredTheme, setTheme, type ThemeMode } from "@/lib/theme";
 import { loadWorkspace, useWorkspaceStore } from "@/lib/agentsky/store";import { integrations as CATALOG, type Integration } from "@/lib/integrationsData";

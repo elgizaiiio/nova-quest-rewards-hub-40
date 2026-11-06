@@ -3,7 +3,7 @@
  * The underlying provider is Browser Use Cloud (https://cloud.browser-use.com):
  * it is the base agent for both plain chat turns that need real work and the
  * in-chat computer surface. The provider name never reaches the UI. */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { edgeAnonKey, edgeUrl } from "@/lib/edgeRuntime";
 
 export interface ComputerFile {

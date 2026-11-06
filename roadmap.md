@@ -82,3 +82,7 @@
 
 - [x] Subscription management page (Premium): Google Play manage/cancel + change plan.
 - [x] Clone legal + docs pages into Ceyo: grok-bot terms, X subscription terms, privacy policy, docs overview (https://cursor.com/en-US/terms/grok-bot, https://x.ai/legal/x-subscription-terms-of-service, https://x.ai/legal/privacy-policy, https://docs.x.ai/grok-bot/overview).
+
+- [x] Deep clean: removed Megsy referral pages/assets, invite-code logic, old notes; new clean database tables (profiles, roles, bots, groups, chats, settings)
+- [ ] Remove unused old server functions (payments/media) — blocked by tool restriction
+- [ ] App still reads the old backend address; reconnect the Supabase project in Lovable settings

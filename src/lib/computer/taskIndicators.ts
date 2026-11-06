@@ -7,7 +7,7 @@
  * so the sidebar can show that state as soon as the user comes back.
  */
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/legacyClient";
 import { pollComputerTask } from "./client";
 
 export type TaskIndicator = "running" | "done";
