@@ -94,7 +94,7 @@ async function startReply(sessionId: string) {
       await readEventStream(res.body, (e) => { push(e); });
     } catch (e: any) {
       if (live.ctl.signal.aborted) push({ id: crypto.randomUUID(), type: "session.status_idle", stop_reason: { type: "interrupted" } });
-      else push({ id: crypto.randomUUID(), type: "session.error", text: e?.message } as RawEvent);
+      else push({ id: crypto.randomUUID(), type: "session.error", message: e?.message } as RawEvent);
     } finally {
       if (running.get(sessionId) === live) running.delete(sessionId);
     }
