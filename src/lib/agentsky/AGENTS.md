@@ -1,4 +1,4 @@
 - Bots, chats and messages live in the new database tables; the browser `agentApi` keeps its old shape so screens did not change. Why: removes the old bot server without rewriting the UI.
 - Bot replies run through `/api/ceyo-chat` (Cerebras loop with Browserbase web tools); it saves the answer with the caller's sign-in. Why: fast replies, real web access, no service-role key.
 - Guided agent creation stays in the existing chat, renders a validated propose_agent card and creates only on an explicit user click. Why: clarify requirements without autonomous agent creation.
-- Long jobs go to the Trigger.dev task in `trigger/` (deploy with the Trigger CLI, prod env); the chat polls `/api/ceyo-task` and posts the result once. If starting fails, the reply runs the job inline. Why: cheapest path that still works before deployment is enabled.
+- Long jobs go to the Inngest function in `src/lib/ceyo/inngest.server.ts` (served at `/api/public/inngest`); the chat polls `/api/ceyo-task` by event id and posts the result once. If starting fails, the reply runs the job inline. Why: free tier and no separate deploy step.

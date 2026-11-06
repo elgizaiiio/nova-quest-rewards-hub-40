@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/api/supabaseServerConfig";
 import { runAgentLoop, type LoopEvent } from "@/lib/ceyo/agentLoop.server";
-import { startLongTask } from "@/lib/ceyo/trigger.server";
+import { startLongTask } from "@/lib/ceyo/inngest.server";
 
 export const Route = createFileRoute("/api/ceyo-chat")({
   server: {
