@@ -288,10 +288,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "preconnect",
-        href: "https://qdnqxjzjecaieuavagvq.supabase.co",
+        href: "https://kcrssdgsefhpzoidlhhm.supabase.co",
         crossOrigin: "anonymous",
       },
-      { rel: "dns-prefetch", href: "https://qdnqxjzjecaieuavagvq.supabase.co" },
+      { rel: "dns-prefetch", href: "https://kcrssdgsefhpzoidlhhm.supabase.co" },
       { rel: "preconnect", href: "https://d8j0ntlcm91z4.cloudfront.net", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://d8j0ntlcm91z4.cloudfront.net" },
     ],
