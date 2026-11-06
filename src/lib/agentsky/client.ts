@@ -121,6 +121,30 @@ async function addUserMessage(sessionId: string, text: string, images: string[] 
   await startReply(sessionId);
 }
 
+/* Background jobs: check unfinished ones and tell open chats when a result lands. */
+const changeSubs = new Set<(sessionId: string) => void>();
+export function onSessionChanged(fn: (sessionId: string) => void) {
+  changeSubs.add(fn);
+  return () => { changeSubs.delete(fn); };
+}
+let polling = false;
+async function checkBackgroundJobs() {
+  if (polling) return;
+  polling = true;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    const { data: rows } = await db.from("messages").select("id").eq("role", "assistant").eq("metadata->>done", "false").limit(10);
+    for (const r of rows ?? []) {
+      const res = await fetch("/api/ceyo-task", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ messageId: r.id }) });
+      const j = await res.json().catch(() => ({}));
+      if (j?.posted && j.conversationId) changeSubs.forEach((f) => f(j.conversationId));
+    }
+  } catch { /* try again next tick */ } finally { polling = false; }
+}
+if (typeof window !== "undefined") setInterval(() => void checkBackgroundJobs(), 10000);
+
 const agentInput = (a: { name: string; description: string; prompt: string; color: AgentColor }) => ({ name: a.name, description: a.description, instructions: a.prompt, look: { color: a.color } });
 
 export const agentApi = {
