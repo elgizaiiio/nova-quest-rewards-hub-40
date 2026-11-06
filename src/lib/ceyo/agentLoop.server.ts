@@ -69,6 +69,35 @@ async function runTool(name: string, args: any): Promise<string> {
   return "Unknown tool.";
 }
 
+const sleep = (ms: number, signal: AbortSignal) => new Promise<void>((resolve, reject) => {
+  const t = setTimeout(resolve, ms);
+  signal.addEventListener("abort", () => { clearTimeout(t); reject(signal.reason); }, { once: true });
+});
+let keyCursor = 0;
+
+/**
+ * Sends one model request. On the per-minute limit (429) it rotates to the next key
+ * (CEREBRAS_API_KEY may hold several, comma separated) and otherwise waits the
+ * provider's Retry-After before trying again, so the reply continues instead of failing.
+ */
+export async function cerebrasRequest(keys: string[], body: string, signal: AbortSignal, maxWaitMs = 90_000): Promise<Response> {
+  let waited = 0;
+  for (let attempt = 0; ; attempt++) {
+    signal.throwIfAborted();
+    const key = keys[keyCursor % keys.length];
+    const res = await fetch(CEREBRAS_URL, { method: "POST", signal, headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body });
+    if (res.status !== 429 && res.status !== 503) return res;
+    await res.body?.cancel().catch(() => {});
+    keyCursor++;
+    if (keys.length > 1 && attempt < keys.length - 1) continue;
+    const after = Number(res.headers.get("retry-after"));
+    const wait = Math.min(Number.isFinite(after) && after > 0 ? after * 1000 + 250 : 2000 * (attempt + 1), 30_000);
+    if (waited + wait > maxWaitMs) throw new Error("I'm a bit overloaded right now, give me a minute and send it again.");
+    waited += wait;
+    await sleep(wait, signal);
+  }
+}
+
 /** Runs the loop and emits transcript events; returns the final answer text. */
 export async function runAgentLoop(
   system: string,
@@ -82,20 +111,15 @@ export async function runAgentLoop(
   const extras = [...(opts.extras || []), ...(opts.extra ? [opts.extra] : [])];
   const allTools = [...tools, ...extras.map((extra) => extra.def)];
   const maxSteps = opts.maxSteps ?? MAX_STEPS;
-  const key = process.env.CEREBRAS_API_KEY;
-  if (!key) throw new Error("AI is not configured");
+  const keys = (process.env.CEREBRAS_API_KEY || "").split(/[\s,]+/).filter(Boolean);
+  if (!keys.length) throw new Error("AI is not configured");
   const messages: Msg[] = [{ role: "system", content: system }, ...history];
   let answer = "";
   const turn = crypto.randomUUID().slice(0, 8);
 
   for (let step = 0; step < maxSteps; step++) {
     signal.throwIfAborted();
-    const res = await fetch(CEREBRAS_URL, {
-      method: "POST",
-      signal,
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, messages, tools: allTools, stream: true, reasoning_effort: "low" }),
-    });
+    const res = await cerebrasRequest(keys, JSON.stringify({ model: MODEL, messages, tools: allTools, stream: true, reasoning_effort: "low" }), signal);
     if (!res.ok || !res.body) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const reader = res.body.getReader();
     const dec = new TextDecoder();
