@@ -27,11 +27,11 @@ const FALLBACK_ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkbnF4anpqZWNhaWV1YXZhZ3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MDY1NTcsImV4cCI6MjEwNDA4MjU1N30.eFK_7U7MRlktAAnQQ_9d4k7tF8N3qZ3QGhKVhH6C3Tg";
 
 const PRIMARY_URL =
-  String(import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL).replace(/\/$/, "") || FALLBACK_URL;
-const PRIMARY_ANON = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_ANON);
+  FALLBACK_URL;
+const PRIMARY_ANON = FALLBACK_ANON;
 
-const COMPUTE_URL = String(import.meta.env.VITE_COMPUTE_SUPABASE_URL || "").replace(/\/$/, "");
-const COMPUTE_ANON = String(import.meta.env.VITE_COMPUTE_SUPABASE_ANON_KEY || "");
+const COMPUTE_URL = "";
+const COMPUTE_ANON = "";
 
 /** Functions that move to the compute account when it is configured. */
 const COMPUTE_FUNCTIONS = new Set([
