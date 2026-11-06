@@ -327,8 +327,19 @@ export function HubChat({
     if (key) document.getElementById(`cx-${key}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [findIdx, matches]);
 
+  // One loader for the whole reply: it stays mounted across brief idle gaps and only its text/avatar change.
+  const rawBusy = s.running || starting;
+  const [busy, setBusy] = useState(rawBusy);
+  useEffect(() => {
+    if (rawBusy) { setBusy(true); return; }
+    const t = window.setTimeout(() => setBusy(false), 700);
+    return () => window.clearTimeout(t);
+  }, [rawBusy]);
+  const lastActivity = useRef<{ bot: AgentInfo; state: "thinking" | "tool" | "talking" } | null>(null);
   // Who is busy right now and what they are doing (thinking / using a tool / writing).
   const activity = useMemo(() => {
+    if (!busy) return [] as { bot: AgentInfo; state: "thinking" | "tool" | "talking" }[];
+    if (!s.running && !starting && lastActivity.current) return [lastActivity.current];
     if (!s.running && !starting) return [] as { bot: AgentInfo; state: "thinking" | "tool" | "talking" }[];
     const live = s.running && lastAgent && s.turns[s.turns.length - 1] === lastAgent ? lastAgent : undefined;
     const st: "thinking" | "tool" | "talking" = orb === "tool" ? "tool" : orb === "talking" ? "talking" : "thinking";
@@ -339,7 +350,8 @@ export function HubChat({
     const speaker = last ? agents.find((a) => group.memberIds.includes(a.id) && a.name === last) : undefined;
     if (!speaker) return [{ bot: coord, state: (live ? st : "thinking") as "thinking" | "tool" | "talking" }];
     return [{ bot: speaker, state: st }];
-  }, [s.running, starting, s.turns, lastAgent, orb, group, agents, agent]);
+  }, [busy, s.running, starting, s.turns, lastAgent, orb, group, agents, agent]);
+  useEffect(() => { lastActivity.current = activity[0] || null; }, [activity]);
 
   const startPress = (b: Bubble) => {
     if (press.current) window.clearTimeout(press.current);
@@ -491,12 +503,12 @@ export function HubChat({
                 ? <ConnectAppsCard key={r.id} title={r.question} apps={readConnectApps({ apps: r.options?.length ? r.options.map((o) => ({ id: o.id, name: o.label, description: o.description })) : [r.subject || r.question] })} ar={ar} onAuthorize={() => nav("/settings/apps")} />
                 : <ChoiceCard key={r.id} question={r.question} options={r.options?.length ? r.options.map((o) => o.label) : r.kind === "approval" ? [ar ? "موافق" : "Approve", ar ? "لأ" : "Don't"] : []} allowFreeText={r.allow_free_text || r.kind === "question"} ar={ar} onAnswer={(v) => { s.setRequests((rs) => rs.filter((x) => x.id !== r.id)); s.send(v); }} />
             ))}
-            {activity.map(({ bot, state }) => {
+            {activity.slice(0, 1).map(({ bot, state }) => {
               const label = state === "tool" ? (ar ? "شغال على الطلب" : "Working on it") : state === "talking" ? (ar ? "بيكتب" : "Writing") : (ar ? "بيفكر في الموضوع" : "Thinking it through");
               return (
-                <div className="cx-working" key={bot.id}>
+                <div className="cx-working" key="working">
                   <BotAvatar agent={bot} size={30} state={state} />
-                  <span dir="auto" className="cx-working-text">{group && <b>{bot.name}</b>}<span className="cx-shimmer">{label}</span></span>
+                  <span dir="auto" className="cx-working-text">{group && <b>{bot.name}</b>}<span key={label} className="cx-shimmer cx-label-swap">{label}</span></span>
                 </div>
               );
             })}
