@@ -220,30 +220,50 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age: number | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
           id: string
           language: string
+          onboarding_completed: boolean
+          primary_bot_id: string | null
           updated_at: string
+          user_type: string | null
         }
         Insert: {
+          age?: number | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id: string
           language?: string
+          onboarding_completed?: boolean
+          primary_bot_id?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Update: {
+          age?: number | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           language?: string
+          onboarding_completed?: boolean
+          primary_bot_id?: string | null
           updated_at?: string
+          user_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_primary_bot_id_fkey"
+            columns: ["primary_bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
