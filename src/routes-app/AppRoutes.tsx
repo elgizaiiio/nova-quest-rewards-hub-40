@@ -2,6 +2,7 @@ import { Route, Navigate } from "react-router-dom";
 import { lazyWithRetry as lazy } from "@/lib/lazyWithRetry";
 import { ProtectedRoute } from "./routeHelpers";
 import { AnimatedShell } from "./AnimatedShell";
+import { OnboardingGate } from "./OnboardingGate";
 import {
   AuthPage,
   OAuthCallbackPage,
@@ -20,6 +21,7 @@ import {
 } from "./lazyPages";
 
 const CeyoLanding = lazy(() => import("@/pages/ceyo/CeyoLanding"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding/OnboardingPage"));
 const CeyoSettings = lazy(() => import("@/pages/ceyo/CeyoSettings"));
 
 const guard = (el: React.ReactNode, guest?: string) => <ProtectedRoute guestEntry={guest}>{el}</ProtectedRoute>;
@@ -28,10 +30,11 @@ const home = <Navigate to="/" replace />;
 /** Ceyo: landing, sign-in, the bot home and settings. Everything else returns home. */
 export const AppRoutes = (_props: { currentUserId: string | null }) => (
   <>
-    <Route path="/" element={guard(<AgentHubPage />, "/welcome")} />
-    <Route path="/index" element={guard(<AgentHubPage />, "/welcome")} />
+    <Route path="/" element={guard(<OnboardingGate><AgentHubPage /></OnboardingGate>, "/welcome")} />
+    <Route path="/index" element={guard(<OnboardingGate><AgentHubPage /></OnboardingGate>, "/welcome")} />
     <Route path="/welcome" element={<CeyoLanding />} />
     <Route path="/landing" element={<CeyoLanding />} />
+    <Route path="/onboarding" element={guard(<OnboardingPage />)} />
 
     <Route element={<AnimatedShell />}>
       <Route path="/auth" element={<AuthPage />} />

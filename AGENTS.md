@@ -22,3 +22,4 @@
 - Telegram fullscreen and inset events update shared safe-area variables, and profile pictures synchronize after verified Telegram sign-in. Why: keep native controls clear and returning-user identity current.
 - Telegram sign-in uses one shared in-flight promise and relies on verifyOtp to persist its session. Why: startup and the auth page must not race single-use login tokens or publish duplicate sign-in transitions.
 - Code that still reads tables from the previous backend imports the untyped client from src/integrations/supabase/legacyClient.ts; new code uses the typed client. Why: keep the build clean while features move to the new schema.
+- Sign-in uses Supabase email OTP directly, and signed-in users without profiles.onboarding_completed are routed to /onboarding (profile → user type → primary bot). Avatars are stored as small data URLs because public storage buckets are blocked in this workspace. Why: no dependency on the old backend functions.
