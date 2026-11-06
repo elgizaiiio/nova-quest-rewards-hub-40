@@ -16,7 +16,7 @@ const TYPES = [
   { id: "other", t: "Something else", I: HelpCircle },
 ];
 const AGES = Array.from({ length: 108 }, (_, i) => i + 13);
-const ROW = 44;
+const ROW = 48;
 
 async function toAvatar(file: File): Promise<string> {
   const img = await createImageBitmap(file);
@@ -40,7 +40,7 @@ function AgeWheel({ value, onChange }: { value: number; onChange: (n: number) =>
     <div className="ob-wheel">
       <div className="ob-wheel-band" aria-hidden />
       <div ref={ref} className="ob-wheel-scroll" onScroll={onScroll} role="listbox" aria-label="Age">
-        <div style={{ height: ROW * 2 }} />
+        <div style={{ height: ROW }} />
         {AGES.map((a, i) => {
           const d = Math.min(Math.abs(i * ROW - scrollTop) / ROW, 2.5);
           return (
@@ -49,7 +49,7 @@ function AgeWheel({ value, onChange }: { value: number; onChange: (n: number) =>
               onClick={() => ref.current?.scrollTo({ top: i * ROW, behavior: "smooth" })}>{a}</button>
           );
         })}
-        <div style={{ height: ROW * 2 }} />
+        <div style={{ height: ROW }} />
       </div>
     </div>
   );
@@ -96,10 +96,6 @@ export default function OnboardingPage() {
     nav("/", { replace: true });
   };
 
-  if (step === 2) {
-    return <div className="ob ob-bot"><AgentForm lang="en" title="Create Your Main Bot" cta="Create" busy={busy} error={err} onSubmit={(v) => void finish(v)} onCancel={() => setStep(1)} /></div>;
-  }
-
   return (
     <div className="ob" dir="ltr">
       <header className="ob-top">
@@ -107,18 +103,25 @@ export default function OnboardingPage() {
         <div className="ob-dots">{[0, 1, 2].map((d) => <span key={d} className={d === step ? "on" : ""} />)}</div>
         <span style={{ width: 40 }} />
       </header>
-      <main className="ob-main" key={step}>
+      {step === 2 && (
+        <main className="ob-main ob-bot" key={step}>
+          <h1>Create your main bot</h1>
+          <p className="ob-sub">Your main assistant. You can change it anytime.</p>
+          <AgentForm lang="en" title="" cta="Create" busy={busy} error={err} onSubmit={(v) => void finish(v)} onCancel={() => setStep(1)} />
+        </main>
+      )}
+      {step < 2 && <main className="ob-main" key={step}>
         {step === 0 && (
           <>
             <h1>Tell us about you</h1>
-            <p className="ob-sub">This is how your bots will know you.</p>
+            <p className="ob-sub">So your bots know who they're helping.</p>
             <button type="button" className="ob-photo" onClick={() => file.current?.click()} aria-label="Your photo">
-              {avatar ? <img src={avatar} alt="" /> : <><Camera size={24} /><span>Add photo</span></>}
+              {avatar ? <img src={avatar} alt="" /> : <span className="ob-initial">{name.trim()[0]?.toUpperCase() || <Camera size={26} />}</span>}
+              <span className="ob-photo-badge"><Camera size={14} /></span>
             </button>
             <input ref={file} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) setAvatar(await toAvatar(f)); }} />
-            <label className="ob-label">Name</label>
             <input className="ob-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={40} />
-            <label className="ob-label">Age</label>
+            <p className="ob-label">How old are you?</p>
             <AgeWheel value={age} onChange={setAge} />
             <button className="ob-btn" disabled={name.trim().length < 2} onClick={() => setStep(1)}>Continue</button>
           </>
@@ -135,7 +138,7 @@ export default function OnboardingPage() {
             <button className="ob-btn" disabled={!type} onClick={() => setStep(2)}>Continue</button>
           </>
         )}
-      </main>
+      </main>}
     </div>
   );
 }
