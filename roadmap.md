@@ -1,5 +1,12 @@
 # Roadmap
 
+## Ceyo executable agents
+- [ ] Fix duplicate thinking loaders and shifting message positions during live sends and history reconciliation.
+- [ ] Add real bot/group creation, role assignment and persistent delegation results to the primary agent.
+- [ ] Connect Composio account management and integration cards inside chat with multiple accounts per app.
+- [ ] Secure and verify Inngest serving, synchronization and durable result delivery.
+- [ ] Run targeted permission/tool tests and verify available live flows.
+
 - [x] Fix old chat loading character and keep sent messages visible during history refreshes; four targeted tests passed. Authenticated live-chat verification is unavailable for the external unmanaged backend.
 
 - [x] Make the signed-in home a Grok-style bot/group hub with the existing animated characters.
