@@ -14,6 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_action_requests: {
+        Row: {
+          account_id: string
+          arguments: Json
+          conversation_id: string
+          created_at: string
+          id: string
+          result: Json | null
+          status: string
+          tool_slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          arguments?: Json
+          conversation_id: string
+          created_at?: string
+          id?: string
+          result?: Json | null
+          status?: string
+          tool_slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          arguments?: Json
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          result?: Json | null
+          status?: string
+          tool_slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_action_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_jobs: {
+        Row: {
+          bot_id: string | null
+          conversation_id: string
+          created_at: string
+          cursor_at: string
+          error: string | null
+          event_id: string | null
+          goal: string
+          id: string
+          result: string | null
+          status: string
+          system_prompt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id?: string | null
+          conversation_id: string
+          created_at?: string
+          cursor_at?: string
+          error?: string | null
+          event_id?: string | null
+          goal: string
+          id?: string
+          result?: string | null
+          status?: string
+          system_prompt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          cursor_at?: string
+          error?: string | null
+          event_id?: string | null
+          goal?: string
+          id?: string
+          result?: string | null
+          status?: string
+          system_prompt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_jobs_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_jobs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_group_members: {
         Row: {
           bot_id: string
@@ -53,6 +163,8 @@ export type Database = {
       bot_groups: {
         Row: {
           avatar_url: string | null
+          category: string
+          coordinator_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -62,6 +174,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          category?: string
+          coordinator_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -71,6 +185,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          category?: string
+          coordinator_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -78,7 +194,15 @@ export type Database = {
           owner_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bot_groups_coordinator_id_fkey"
+            columns: ["coordinator_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bots: {
         Row: {
@@ -321,6 +445,32 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      save_bot_group: {
+        Args: {
+          p_category?: string
+          p_coordinator: string
+          p_id?: string
+          p_members: string[]
+          p_name: string
+        }
+        Returns: {
+          avatar_url: string | null
+          category: string
+          coordinator_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bot_groups"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {

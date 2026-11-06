@@ -224,6 +224,8 @@ export function describeTool(name: string, args: any, lang: Lang): { kind: StepK
 
 function payloadOf(result: any): any | null {
   if (!result) return null;
+  if (typeof result === "object" && result.type) return result;
+  if (typeof result === "string") { try { const p = JSON.parse(result); if (p?.type) return p; } catch { /* legacy payload */ } }
   if (result.structuredContent?.type) return result.structuredContent;
   const s = typeof result === "string" ? result : JSON.stringify(result);
   const m = s.match(/<!--megsy:([\s\S]*?)-->/);
@@ -364,7 +366,7 @@ export function buildTranscript(events: RawEvent[], lang: Lang, running: boolean
         }
         // A message sent mid-run steers the same run; keep the agent turn open after it.
         const wasRunning = !!cur;
-        if (cur) flushText();
+        if (cur) close();
         turns.push({ type: "user", id: f.id, text: f.text, images: f.images, at: f.at });
         if (wasRunning) {
           cur = null;
@@ -407,6 +409,7 @@ export function buildTranscript(events: RawEvent[], lang: Lang, running: boolean
         // One normalised view of the arguments for every card built below, so a
         // wrapped call (`{ id, args:{…} }`) reads exactly like a flat one.
         const ca = normalizeArgs(f.args);
+        if (n === "connect_app") t.cards.push({ kind: "widget", id: f.callId, name: "connect_app", data: { apps: [{ id: ca.app, name: ca.app }], title: ca.reason || "Connect an account" } });
         if (n.includes("ask_user"))
           t.cards.push({
             kind: "question",
@@ -464,7 +467,7 @@ export function buildTranscript(events: RawEvent[], lang: Lang, running: boolean
         }
         // Named widgets let a tool pick an exact card (cart, map, weather, …) while
         // anything unnamed still lands on the universal service card.
-        if (p?.type === "megsy.widget" && p.widget) {
+        if ((p?.type === "megsy.widget" || p?.type === "ceyo.widget") && p.widget) {
           const card: Card = { kind: "widget", id: f.callId, name: String(p.widget), data: (p.data ?? {}) as Record<string, unknown> };
           const i = t.cards.findIndex((c) => c.id === card.id);
           if (i >= 0) t.cards[i] = card;
