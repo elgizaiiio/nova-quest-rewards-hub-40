@@ -3,7 +3,7 @@
  *  and returns a token_hash we exchange for a real session). */
 import { supabase } from "@/integrations/supabase/client";
 
-const SUPABASE_URL = "https://qdnqxjzjecaieuavagvq.supabase.co";
+const SUPABASE_URL = "https://kcrssdgsefhpzoidlhhm.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0Z2FtcGR0YXd1ZWZ3d2F5bmN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3Njk5ODAsImV4cCI6MjA4ODM0NTk4MH0.5ZOzuxCrm-TO4zzRDJ68LrCLH3f0itiznUxhbEupvGg";
 

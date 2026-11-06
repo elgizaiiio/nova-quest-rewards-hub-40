@@ -8,9 +8,9 @@
  *  The service-role key is NEVER hardcoded — routes fall back to the caller's
  *  JWT plus RLS instead.
  */
-const FALLBACK_URL = "https://qdnqxjzjecaieuavagvq.supabase.co";
+const FALLBACK_URL = "https://kcrssdgsefhpzoidlhhm.supabase.co";
 const FALLBACK_PUBLISHABLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkbnF4anpqZWNhaWV1YXZhZ3ZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1MDY1NTcsImV4cCI6MjEwNDA4MjU1N30.eFK_7U7MRlktAAnQQ_9d4k7tF8N3qZ3QGhKVhH6C3Tg";
+  "sb_publishable_qoVkpETZyG-dHOq_XYnFPw_vrxR_aJC";
 
 export const SUPABASE_URL: string =
   FALLBACK_URL;
