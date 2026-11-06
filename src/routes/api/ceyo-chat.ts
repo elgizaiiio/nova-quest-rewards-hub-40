@@ -18,11 +18,13 @@ export const Route = createFileRoute("/api/ceyo-chat")({ server: { handlers: {
     ]);
     const cursor = rows?.[0]?.created_at || new Date(0).toISOString();
     let lastSeen = cursor;
+    let onSteer: ((event: import("@/lib/ceyo/agentLoop.server").LoopEvent) => void) | undefined;
     const history = [...(rows || [])].reverse().filter((m) => m.content).map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }));
     const poll = async () => {
-      const { data, error } = await db.from("messages").select("content,created_at").eq("conversation_id", conv.id).eq("role", "user").gt("created_at", lastSeen).order("created_at");
+      const { data, error } = await db.from("messages").select("id,content,created_at").eq("conversation_id", conv.id).eq("role", "user").gt("created_at", lastSeen).order("created_at");
       if (error) throw new Error(error.message);
       if (data?.length) lastSeen = data[data.length - 1].created_at;
+      for (const message of data || []) onSteer?.({ id: message.id, type: "user.message", at: message.created_at, content: [{ type: "text", text: message.content }] });
       return (data || []).map((m) => m.content);
     };
     const [{ runAgentLoop }, { workspaceTools }, { agentPrompt }, { startLongTask, backgroundReady }] = await Promise.all([
@@ -38,6 +40,7 @@ export const Route = createFileRoute("/api/ceyo-chat")({ server: { handlers: {
         if (e.type !== "agent.reasoning") events.push(e);
         try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`)); } catch { /* closed */ }
       };
+      onSteer = emit;
       emit({ id: `${rid}-run`, type: "session.status_running" });
       try {
         const tools = workspaceTools({ db, userId, botId: conv.bot_id, conversationId: conv.id, primary, emit, signal: request.signal, poll });

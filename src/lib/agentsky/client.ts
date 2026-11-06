@@ -219,8 +219,10 @@ export const agentApi = {
     const { data, error } = await db.from("messages").select("*").eq("conversation_id", id).order("created_at");
     if (error) fail(error);
     const events: RawEvent[] = [];
+    const embeddedUsers = new Set((data || []).flatMap((m: any) => (m.metadata?.transcript || []).filter((e: RawEvent) => e.type === "user.message").map((e: RawEvent) => e.id)));
     for (const m of data ?? []) {
       if (m.role === "user") {
+        if (embeddedUsers.has(m.id)) continue;
         const imgs: string[] = Array.isArray(m.metadata?.images) ? m.metadata.images : [];
         events.push({ id: m.id, type: "user.message", at: m.created_at, content: [{ type: "text", text: m.content }, ...imgs.map((url) => ({ type: "image", source: { type: "url", url } }))] });
       } else {
