@@ -21,8 +21,14 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
   const reload = useCallback(async (sid: string) => {
     const r = await agentApi.events(sid);
     if (sidRef.current !== sid) return;
-    seen.current = new Set(r.events.map((e) => e.id));
-    setEvents(r.events);
+    setEvents((previous) => {
+      const ids = new Set(r.events.map((e) => e.id));
+      // A history request can finish before a just-sent message is persisted.
+      const retained = previous.filter((e) => e.type === "user.message" && !ids.has(e.id));
+      const next = [...r.events, ...retained];
+      seen.current = new Set(next.map((e) => e.id));
+      return next;
+    });
     setRunning(r.status === "running");
   }, []);
 
@@ -42,14 +48,15 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
     setRequests([]);
     setError(null);
     seen.current = new Set();
+    setLoading(false);
     if (!sessionId) return;
     const sid = sessionId;
     const ctl = new AbortController();
     let retry = 0;
     setLoading(true);
     reload(sid)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e) => { if (!ctl.signal.aborted) setError(e.message); })
+      .finally(() => { if (!ctl.signal.aborted) setLoading(false); });
     void loadRequests(sid);
 
     const loop = async () => {
@@ -92,10 +99,27 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
   const sendNow = useCallback(async (text: string, images: string[] = []) => {
     const sid = sidRef.current;
     if (!sid) return;
+    const optimistic: RawEvent = {
+      id: `pending-${crypto.randomUUID()}`, type: "user.message", at: new Date().toISOString(),
+      content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))],
+    };
+    seen.current.add(optimistic.id);
+    setEvents((previous) => [...previous, optimistic]);
+    setError(null);
     setRunning(true);
     try {
-      await agentApi.send(sid, text, images);
+      const saved = await agentApi.send(sid, text, images);
+      if (sidRef.current !== sid) return;
+      seen.current.delete(optimistic.id);
+      seen.current.add(saved.id);
+      setEvents((previous) => previous.flatMap((event) => {
+        if (event.id === saved.id) return [];
+        return [event.id === optimistic.id ? saved : event];
+      }));
     } catch (e: any) {
+      if (sidRef.current !== sid) return;
+      seen.current.delete(optimistic.id);
+      setEvents((previous) => previous.filter((event) => event.id !== optimistic.id));
       setRunning(false);
       setError(e.message);
     }

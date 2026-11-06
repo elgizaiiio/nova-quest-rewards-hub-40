@@ -233,6 +233,7 @@ export function HubChat({
   void sessions; void onHide;
   const nav = useNavigate();
   const [starting, setStarting] = useState(false);
+  const [firstMessage, setFirstMessage] = useState<{ id: string; text: string; at: string; sessionId: string | null } | null>(null);
   const [toast, setToast] = useState<{ title: string; body?: string; tone?: "error" } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
@@ -268,12 +269,15 @@ export function HubChat({
 
   const startConversation = async (text: string) => {
     if (demo) return;
+    setFirstMessage({ id: `first-${crypto.randomUUID()}`, text, at: new Date().toISOString(), sessionId: null });
     setStarting(true);
     try {
       const result = await agentApi.createSession({ agentId: agent.id, text });
       workspace.upsertSession(result.session);
+      setFirstMessage((pending) => pending ? { ...pending, sessionId: result.session.id } : null);
       onSession(result.session.id);
     } catch (error) {
+      setFirstMessage(null);
       setToast({ title: ar ? "المحادثة مبدأتش" : "Could not start chat", body: error instanceof Error ? error.message : undefined, tone: "error" });
     } finally {
       setStarting(false);
@@ -288,7 +292,10 @@ export function HubChat({
     const source: any[] = demo ? [
       { id: "d1", type: "user", text: ar ? "عايزكم تجهزوا خطة الأسبوع" : "Plan this week for me", images: [], at: now },
       ...(group ? [{ id: "d2", type: "agent", text: group.memberIds.slice(0, 2).map((id) => `[[speaker: ${agents.find((a) => a.id === id)?.name}]] @${agents.find((a) => a.id === group.memberIds[0])?.name} ${ar ? "تمام، هبدأ دلوقتي." : "On it."}`).join("\n\n"), steps: [], cards: [] }] : [{ id: "d2", type: "agent", text: ar ? "أكيد، هقسمها لثلاث خطوات." : "Sure, three steps.", steps: [], cards: [] }]),
-    ] : s.turns;
+    ] : [...s.turns];
+    if (!demo && firstMessage && (!firstMessage.sessionId || firstMessage.sessionId === sessionId) && !source.some((turn) => turn.type === "user" && turn.text === firstMessage.text)) {
+      source.unshift({ ...firstMessage, type: "user", images: [] });
+    }
     source.forEach((turn: any, turnIndex) => {
       if (turn.type === "user") {
         lastAt = turn.at || lastAt;
@@ -303,7 +310,7 @@ export function HubChat({
       });
     });
     return out;
-  }, [s.turns, group, agents, agent, demo, ar]);
+  }, [s.turns, group, agents, agent, demo, ar, firstMessage, sessionId]);
 
   const q = findQuery.trim();
   const matches = useMemo(() => (q ? bubbles.filter((b) => b.text.toLowerCase().includes(q.toLowerCase())).map((b) => b.key) : []), [bubbles, q]);
@@ -348,7 +355,7 @@ export function HubChat({
   };
 
   const placeholder = ar ? `رسالة لـ ${title}` : `Message ${title}`;
-  const empty = (!sessionId && !demo) || (!s.loading && bubbles.length === 0);
+  const empty = bubbles.length === 0;
 
   return (
     <section className="cx-chat" aria-label={`${title} conversation`}>
