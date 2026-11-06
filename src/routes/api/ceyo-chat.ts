@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/api/supabaseServerConfig";
 import { runAgentLoop, type LoopEvent } from "@/lib/ceyo/agentLoop.server";
+import { startLongTask } from "@/lib/ceyo/trigger.server";
 
 export const Route = createFileRoute("/api/ceyo-chat")({
   server: {
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/api/ceyo-chat")({
             "- An emoji now and then is fine, never forced. Ask a short follow-up question when it feels natural.",
             "- If the user sends new messages while you are working, adjust to them right away. If they tell you to stop or drop it, stop and reply with a quick casual ok.",
             "- Use web_search and read_url silently whenever fresh or outside facts help.",
+            "- For big jobs that need many steps (deep research, comparing lots of sources, long reports), call start_long_task once with a clear goal, then casually tell your friend you're on it and will message them when done.",
             "Today is " + new Date().toDateString() + ".",
           ].join("\n"),
         ].filter(Boolean).join("\n\n");
@@ -64,8 +66,30 @@ export const Route = createFileRoute("/api/ceyo-chat")({
             emit({ id: `${rid}-run`, type: "session.status_running" });
             let text = "";
             let failed = "";
+            let pendingRun: string | null = null;
             try {
-              text = await runAgentLoop(system, history, emit, request.signal, poll);
+              const longTask = {
+                name: "start_long_task",
+                def: {
+                  type: "function",
+                  function: {
+                    name: "start_long_task",
+                    description: "Start a long multi-step background job (deep research, long reports). The result arrives in this chat later.",
+                    parameters: { type: "object", properties: { goal: { type: "string" } }, required: ["goal"] },
+                  },
+                },
+                run: async (args: any) => {
+                  const goal = String(args.goal ?? "").slice(0, 4000);
+                  try {
+                    pendingRun = await startLongTask({ system, goal });
+                    return "Started in the background. The result will be sent to this chat automatically.";
+                  } catch {
+                    // Background jobs unavailable: do the work right here with more steps.
+                    return runAgentLoop(system, [{ role: "user", content: goal }], () => {}, request.signal, async () => [], { maxSteps: 20 });
+                  }
+                },
+              };
+              text = await runAgentLoop(system, history, emit, request.signal, poll, { extra: longTask });
             } catch (e) {
               failed = e instanceof Error ? e.message : "Something went wrong";
               if (!request.signal.aborted) emit({ id: `${rid}-err`, type: "session.error", message: failed });
@@ -73,7 +97,7 @@ export const Route = createFileRoute("/api/ceyo-chat")({
             if (text || !failed) {
               await db.from("messages").insert({
                 conversation_id: conv.id, user_id: u.user!.id, role: "assistant", bot_id: conv.bot_id,
-                content: text.trim(), metadata: { events: events.filter((x) => x.type.startsWith("agent.tool")) } as never,
+                content: text.trim(), metadata: { events: events.filter((x) => x.type.startsWith("agent.tool")), ...(pendingRun ? { pendingRun, done: "false" } : {}) } as never,
               });
               await db.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conv.id);
             }

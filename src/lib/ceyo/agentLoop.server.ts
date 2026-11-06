@@ -1,7 +1,7 @@
 /** @doc Bot reply loop: Cerebras streams the answer and may call web tools (Browserbase) several times before it finishes. */
 const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
-/** Cheapest + fastest model on Cerebras (Qwen). */
-const MODEL = "qwen-3.8-27b";
+/** Cheapest + fastest model on Cerebras. */
+const MODEL = "gpt-oss-120b";
 const MAX_STEPS = 8;
 
 export type LoopEvent = Record<string, unknown> & { id: string; type: string };
@@ -77,19 +77,22 @@ export async function runAgentLoop(
   signal: AbortSignal,
   /** New user messages sent while the bot is working; they steer the same run. */
   poll: () => Promise<string[]> = async () => [],
+  opts: { maxSteps?: number; extra?: { def: object; name: string; run: (args: any) => Promise<string> } } = {},
 ): Promise<string> {
+  const allTools = opts.extra ? [...tools, opts.extra.def] : tools;
+  const maxSteps = opts.maxSteps ?? MAX_STEPS;
   const key = process.env.CEREBRAS_API_KEY;
   if (!key) throw new Error("AI is not configured");
   const messages: Msg[] = [{ role: "system", content: system }, ...history];
   let answer = "";
   const turn = crypto.randomUUID().slice(0, 8);
 
-  for (let step = 0; step < MAX_STEPS; step++) {
+  for (let step = 0; step < maxSteps; step++) {
     const res = await fetch(CEREBRAS_URL, {
       method: "POST",
       signal,
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, messages, tools, stream: true }),
+      body: JSON.stringify({ model: MODEL, messages, tools: allTools, stream: true, reasoning_effort: "low" }),
     });
     if (!res.ok || !res.body) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const reader = res.body.getReader();
@@ -147,7 +150,7 @@ export async function runAgentLoop(
       emit({ id: `${c.id}-call`, type: "agent.tool_use", part: { type: "tool_call", call_id: c.id, tool_name: c.name, args } });
       let result: string;
       let status = "ok";
-      try { result = await runTool(c.name, args); } catch (e) { result = e instanceof Error ? e.message : "Tool failed"; status = "error"; }
+      try { result = opts.extra && c.name === opts.extra.name ? await opts.extra.run(args) : await runTool(c.name, args); } catch (e) { result = e instanceof Error ? e.message : "Tool failed"; status = "error"; }
       emit({ id: `${c.id}-res`, type: "agent.tool_result", part: { type: "tool_result", call_id: c.id, tool_name: c.name, status, result: result.slice(0, 500) } });
       messages.push({ role: "tool", tool_call_id: c.id, content: result });
     }

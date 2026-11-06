@@ -1,7 +1,7 @@
 /** @doc Live AgentSky session: history + SSE stream, running state, stop, and a send queue
  *  that lets the user type while the agent works (queued messages go out when it finishes). */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { agentApi, openStream, type AgentRequest, type RawEvent } from "@/lib/agentsky/client";
+import { agentApi, onSessionChanged, openStream, type AgentRequest, type RawEvent } from "@/lib/agentsky/client";
 import { buildTranscript, type Lang } from "@/lib/agentsky/transcript";
 
 export type Queued = { id: string; text: string; images: string[] };
@@ -85,6 +85,9 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
     void loop();
     return () => ctl.abort();
   }, [sessionId, reload, loadRequests]);
+
+  // A background job finished for this chat: show its result.
+  useEffect(() => onSessionChanged((sid) => { if (sid === sidRef.current) void reload(sid).catch(() => {}); }), [reload]);
 
   const sendNow = useCallback(async (text: string, images: string[] = []) => {
     const sid = sidRef.current;
