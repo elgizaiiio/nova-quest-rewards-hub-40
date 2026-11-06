@@ -67,7 +67,11 @@ export function AgentForm({
   error,
   onSubmit,
   onCancel,
+  title,
+  cta,
 }: {
+  title?: string;
+  cta?: string;
   lang: HubLang;
   initial?: AgentInfo | null;
   category?: string;
@@ -100,7 +104,7 @@ export function AgentForm({
   };
   return (
     <section className="gx-create">
-      <header className="gx-create-head"><button type="button" className="gx-round" aria-label="Close" onClick={onCancel}><X size={22} /></button><h1>{initial ? "Edit Bot" : "Create New Bot"}</h1></header>
+      <header className="gx-create-head"><button type="button" className="gx-round" aria-label="Close" onClick={onCancel}><X size={22} /></button><h1>{title || (initial ? "Edit Bot" : "Create New Bot")}</h1></header>
       <div className="gx-create-body">
         <div className="gx-create-preview"><BotAvatar agent={{ name: name || "Bot", color: agentColorFor(hex), isDefault: false }} look={look} size={96} /></div>
         <input className="gx-name" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name your Bot" onKeyDown={(e) => { if (e.key === "Enter") submit(); }} />
@@ -136,7 +140,7 @@ export function AgentForm({
         </div>
       </>}
       {error && <p className="gx-error" role="alert">{error}</p>}
-      <button type="button" className="gx-create-cta" disabled={!ok} onClick={submit}>{busy ? "…" : initial ? "Save" : "Create"}</button>
+      <button type="button" className="gx-create-cta" disabled={!ok} onClick={submit}>{busy ? "…" : cta || (initial ? "Save" : "Create")}</button>
     </section>
   );
 }

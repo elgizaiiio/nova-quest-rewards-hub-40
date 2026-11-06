@@ -250,8 +250,8 @@ let currentLang: AuthLang | null = null;
 
 /** Current effective language: explicit stored choice → English. */
 export function getUserLang(): AuthLang {
-  if (currentLang) return currentLang;
-  currentLang = readStoredLang() ?? "en";
+  // The app is English-only for now.
+  currentLang = "en";
   return currentLang;
 }
 
@@ -304,6 +304,7 @@ export async function setUserLang(
   opts: { syncRemote?: boolean } = {},
 ): Promise<void> {
   if (!isSupportedLang(lang)) return;
+  lang = "en"; // English-only for now.
   persistLangLocally(lang);
   applyHtmlLang(lang);
   applyZoneForLang(lang);
@@ -338,12 +339,9 @@ export async function setUserLang(
  * the first visit so the choice stays stable.
  */
 export async function initUserLang(): Promise<AuthLang> {
-  let lang = readStoredLang();
-  if (!lang) {
-    // English is the product default. Arabic remains available as an explicit choice.
-    lang = "en";
-    persistLangLocally(lang);
-  }
+  // English-only for now: override any stored choice.
+  const lang: AuthLang = "en";
+  persistLangLocally(lang);
   applyHtmlLang(lang);
   applyZoneForLang(lang);
   emitChange(lang);
