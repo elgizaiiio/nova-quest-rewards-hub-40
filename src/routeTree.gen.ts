@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
 import { Route as ApiAnythingRouteImport } from './routes/api/anything'
+import { Route as ApiCeyoChatRouteImport } from './routes/api/ceyo-chat'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiClerkRouteImport } from './routes/api/clerk'
 import { Route as ApiComputerAgentRouteImport } from './routes/api/computer-agent'
@@ -47,6 +48,11 @@ const SplatRoute = SplatRouteImport.update({
 const ApiAnythingRoute = ApiAnythingRouteImport.update({
   id: '/api/anything',
   path: '/api/anything',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCeyoChatRoute = ApiCeyoChatRouteImport.update({
+  id: '/api/ceyo-chat',
+  path: '/api/ceyo-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
+  '/api/ceyo-chat': typeof ApiCeyoChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
+  '/api/ceyo-chat': typeof ApiCeyoChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
   '/api/anything': typeof ApiAnythingRoute
+  '/api/ceyo-chat': typeof ApiCeyoChatRoute
   '/api/chat': typeof ApiChatRoute
   '/api/clerk': typeof ApiClerkRoute
   '/api/computer-agent': typeof ApiComputerAgentRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/api/anything'
+    | '/api/ceyo-chat'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/api/anything'
+    | '/api/ceyo-chat'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/api/anything'
+    | '/api/ceyo-chat'
     | '/api/chat'
     | '/api/clerk'
     | '/api/computer-agent'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
   ApiAnythingRoute: typeof ApiAnythingRoute
+  ApiCeyoChatRoute: typeof ApiCeyoChatRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiClerkRoute: typeof ApiClerkRoute
   ApiComputerAgentRoute: typeof ApiComputerAgentRoute
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/api/anything'
       fullPath: '/api/anything'
       preLoaderRoute: typeof ApiAnythingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ceyo-chat': {
+      id: '/api/ceyo-chat'
+      path: '/api/ceyo-chat'
+      fullPath: '/api/ceyo-chat'
+      preLoaderRoute: typeof ApiCeyoChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -522,6 +542,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   ApiAnythingRoute: ApiAnythingRoute,
+  ApiCeyoChatRoute: ApiCeyoChatRoute,
   ApiChatRoute: ApiChatRoute,
   ApiClerkRoute: ApiClerkRoute,
   ApiComputerAgentRoute: ApiComputerAgentRoute,
