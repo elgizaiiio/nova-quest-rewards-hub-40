@@ -30,6 +30,7 @@ import { Route as ApiWebSearchRouteImport } from './routes/api/web-search'
 import { Route as ApiAgentSplatRouteImport } from './routes/api/agent.$'
 import { Route as ApiPublicFxRouteImport } from './routes/api/public/fx'
 import { Route as ApiPublicGeoRouteImport } from './routes/api/public/geo'
+import { Route as ApiPublicInngestRouteImport } from './routes/api/public/inngest'
 import { Route as ApiPublicRemindersTickRouteImport } from './routes/api/public/reminders-tick'
 import { Route as ApiPublicTelegramKeysRouteImport } from './routes/api/public/telegram-keys'
 import { Route as ApiPublicAgentToolsTokenRouteImport } from './routes/api/public/agent-tools.$token'
@@ -141,6 +142,11 @@ const ApiPublicGeoRoute = ApiPublicGeoRouteImport.update({
   path: '/api/public/geo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicInngestRoute = ApiPublicInngestRouteImport.update({
+  id: '/api/public/inngest',
+  path: '/api/public/inngest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRemindersTickRoute = ApiPublicRemindersTickRouteImport.update({
   id: '/api/public/reminders-tick',
   path: '/api/public/reminders-tick',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/api/agent/$': typeof ApiAgentSplatRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/inngest': typeof ApiPublicInngestRoute
   '/api/public/reminders-tick': typeof ApiPublicRemindersTickRoute
   '/api/public/telegram-keys': typeof ApiPublicTelegramKeysRoute
   '/api/public/agent-tools/$token': typeof ApiPublicAgentToolsTokenRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/api/agent/$': typeof ApiAgentSplatRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/inngest': typeof ApiPublicInngestRoute
   '/api/public/reminders-tick': typeof ApiPublicRemindersTickRoute
   '/api/public/telegram-keys': typeof ApiPublicTelegramKeysRoute
   '/api/public/agent-tools/$token': typeof ApiPublicAgentToolsTokenRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/api/agent/$': typeof ApiAgentSplatRoute
   '/api/public/fx': typeof ApiPublicFxRoute
   '/api/public/geo': typeof ApiPublicGeoRoute
+  '/api/public/inngest': typeof ApiPublicInngestRoute
   '/api/public/reminders-tick': typeof ApiPublicRemindersTickRoute
   '/api/public/telegram-keys': typeof ApiPublicTelegramKeysRoute
   '/api/public/agent-tools/$token': typeof ApiPublicAgentToolsTokenRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/api/agent/$'
     | '/api/public/fx'
     | '/api/public/geo'
+    | '/api/public/inngest'
     | '/api/public/reminders-tick'
     | '/api/public/telegram-keys'
     | '/api/public/agent-tools/$token'
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/api/agent/$'
     | '/api/public/fx'
     | '/api/public/geo'
+    | '/api/public/inngest'
     | '/api/public/reminders-tick'
     | '/api/public/telegram-keys'
     | '/api/public/agent-tools/$token'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/api/agent/$'
     | '/api/public/fx'
     | '/api/public/geo'
+    | '/api/public/inngest'
     | '/api/public/reminders-tick'
     | '/api/public/telegram-keys'
     | '/api/public/agent-tools/$token'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   ApiAgentSplatRoute: typeof ApiAgentSplatRoute
   ApiPublicFxRoute: typeof ApiPublicFxRoute
   ApiPublicGeoRoute: typeof ApiPublicGeoRoute
+  ApiPublicInngestRoute: typeof ApiPublicInngestRoute
   ApiPublicRemindersTickRoute: typeof ApiPublicRemindersTickRoute
   ApiPublicTelegramKeysRoute: typeof ApiPublicTelegramKeysRoute
   ApiPublicAgentToolsTokenRoute: typeof ApiPublicAgentToolsTokenRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGeoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/inngest': {
+      id: '/api/public/inngest'
+      path: '/api/public/inngest'
+      fullPath: '/api/public/inngest'
+      preLoaderRoute: typeof ApiPublicInngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/reminders-tick': {
       id: '/api/public/reminders-tick'
       path: '/api/public/reminders-tick'
@@ -580,6 +600,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentSplatRoute: ApiAgentSplatRoute,
   ApiPublicFxRoute: ApiPublicFxRoute,
   ApiPublicGeoRoute: ApiPublicGeoRoute,
+  ApiPublicInngestRoute: ApiPublicInngestRoute,
   ApiPublicRemindersTickRoute: ApiPublicRemindersTickRoute,
   ApiPublicTelegramKeysRoute: ApiPublicTelegramKeysRoute,
   ApiPublicAgentToolsTokenRoute: ApiPublicAgentToolsTokenRoute,
