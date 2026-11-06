@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Ceyo executable agents
+- [ ] Update the Composio project key through the secure form and verify account authorization.
 - [ ] Fix duplicate thinking loaders and shifting message positions during live sends and history reconciliation.
 - [ ] Add real bot/group creation, role assignment and persistent delegation results to the primary agent.
 - [ ] Connect Composio account management and integration cards inside chat with multiple accounts per app.
