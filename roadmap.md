@@ -1,13 +1,16 @@
 # Roadmap
 
 ## Ceyo executable agents
-- [ ] Make the chat composer smaller and hide its inner scrollbar.
-- [ ] Update the Composio project key through the secure form and verify account authorization.
-- [ ] Fix duplicate thinking loaders and shifting message positions during live sends and history reconciliation.
-- [ ] Add real bot/group creation, role assignment and persistent delegation results to the primary agent.
-- [ ] Connect Composio account management and integration cards inside chat with multiple accounts per app.
-- [ ] Secure and verify Inngest serving, synchronization and durable result delivery.
-- [ ] Run targeted permission/tool tests and verify available live flows.
+- [x] Make the chat composer smaller and hide its inner scrollbar.
+- [x] Update the Composio project key through the secure form; account and tool listing API checks returned 200.
+- [x] Fix duplicate thinking loaders and shifting message positions during live sends and history reconciliation; targeted tests passed.
+- [x] Add real bot/group creation, role assignment and persistent delegation results to the primary agent.
+- [x] Connect Composio account management and integration approval cards inside chat with multiple accounts per app.
+- [x] Secure Inngest serving and durable idempotent result delivery; unsigned requests rejected.
+- [ ] Inngest synchronization: app.ceyo.si does not resolve, confirmed by Inngest's sync response; publish/connect the domain first. Inline work remains available.
+- [ ] Authenticated end-to-end bot creation/delegation and Composio OAuth checks: external unmanaged Supabase provides no test session.
+- [ ] Arbitrary code execution/full bot computer: only Browserbase web reading is configured; a code-execution service is not connected.
+- [x] Run targeted message, tool-input and steering tests.
 
 - [x] Fix old chat loading character and keep sent messages visible during history refreshes; four targeted tests passed. Authenticated live-chat verification is unavailable for the external unmanaged backend.
 

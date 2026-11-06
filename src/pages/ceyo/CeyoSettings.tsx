@@ -13,7 +13,9 @@ import { getStoredTheme, setTheme, type ThemeMode } from "@/lib/theme";
 import { loadWorkspace, useWorkspaceStore } from "@/lib/agentsky/store";import { integrations as CATALOG, type Integration } from "@/lib/integrationsData";
 import {
   disconnectIntegration, loadIntegrationConnections, startIntegrationConnection, waitForConnectionRefresh,
+  integrationSlug, type IntegrationAccount,
 } from "@/lib/integrationBackend";
+import { Button } from "@/components/ui/button";
 import { IntegrationLogo } from "@/components/chat/integrations/IntegrationRow";
 import {
   DEFAULT_PERMISSIONS, PERMISSIONS_STORAGE_KEY, addPermissionRule, parsePermissionPreferences,
@@ -367,11 +369,13 @@ function Vault_({ nav }: { nav: Nav }) {
 
 function Apps({ nav, appId }: { nav: Nav; appId?: string }) {
   const [connected, setConnected] = useState<Record<string, boolean>>({});
+  const [accounts, setAccounts] = useState<IntegrationAccount[]>([]);
+  const [error, setError] = useState("");
   const [cat, setCat] = useState("All");
   const [busy, setBusy] = useState("");
   const [query, setQuery] = useState("");
   const refresh = async (): Promise<boolean> => {
-    try { const state = await loadIntegrationConnections(CATALOG); setConnected(state.connectedApps as Record<string, boolean>); return true; } catch { return false; }
+    try { const state = await loadIntegrationConnections(CATALOG); setConnected(state.connectedApps); setAccounts(state.accounts); setError(""); return true; } catch (e) { setError(e instanceof Error ? e.message : "Could not load accounts"); return false; }
   };
   useEffect(() => { void refresh(); }, []);
   const cats = useMemo(() => ["All", ...Array.from(new Set(CATALOG.map((item) => item.category)))], []);
@@ -380,22 +384,31 @@ function Apps({ nav, appId }: { nav: Nav; appId?: string }) {
   const toggle = async (item: Integration) => {
     setBusy(item.app);
     try {
-      if (connected[item.app]) { await disconnectIntegration(item); toast.success(`${item.name} disconnected`); }
-      else {
+      {
+        const before = accounts.filter((a) => a.app === integrationSlug(item.app) && a.status === "ACTIVE").length;
         const result = await startIntegrationConnection(item);
-        if ("popup" in result && result.popup) await waitForConnectionRefresh(refresh, result.popup);
+        if ("popup" in result && result.popup) await waitForConnectionRefresh(async () => {
+          const state = await loadIntegrationConnections(CATALOG);
+          setConnected(state.connectedApps); setAccounts(state.accounts);
+          return state.accounts.filter((a) => a.app === integrationSlug(item.app) && a.status === "ACTIVE").length > before;
+        }, result.popup);
         toast.success(`${item.name} connected`);
       }
       await refresh();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Could not connect"); } finally { setBusy(""); }
   };
-  const label = (item: Integration) => connected[item.app] ? "Connected" : item.type === "oauth" || item.type === "pipedream" ? "Authorize" : "Connect";
-  const button = (item: Integration, big = false) => <button type="button" className={big ? "gx-connect-big" : "gx-pill"} data-kind={connected[item.app] ? "on" : label(item) === "Authorize" ? "auth" : "plain"} disabled={busy === item.app} onClick={(event) => { event.stopPropagation(); void toggle(item); }}>{busy === item.app ? "…" : label(item)}</button>;
+  const label = (item: Integration) => connected[item.app] ? "Add account" : "Connect";
+  const button = (item: Integration, big = false) => <Button variant="ghost" type="button" className={big ? "gx-connect-big" : "gx-pill"} disabled={busy === item.app} onClick={(event) => { event.stopPropagation(); void toggle(item); }}>{busy === item.app ? "…" : label(item)}</Button>;
   const detail = appId ? CATALOG.find((item) => item.app === appId) : undefined;
   if (detail) return <div className="gx-apps gx-sheet" key={detail.id}>
     <button type="button" className="gx-round" aria-label="Close" onClick={() => nav("/settings/apps")}><X size={22} /></button>
     <div className="gx-detail"><span className="gx-logo gx-logo-lg"><IntegrationLogo item={detail} size={44} /></span><h2>{detail.name}</h2><p>{detail.description}</p></div>
     <div className="gx-detail-cta">{button(detail, true)}</div>
+    {error && <p className="text-destructive p-4" role="alert">{error}</p>}
+    <div className="px-4">{accounts.filter((a) => a.app === integrationSlug(detail.app)).map((account) => <div key={account.id} className="flex items-center gap-3 border-b border-border py-3">
+      <span className="min-w-0 flex-1"><strong className="block text-sm break-words">{account.label}</strong><small className="text-muted-foreground">{account.status === "ACTIVE" ? "Connected" : account.status}</small></span>
+      <Button variant="ghost" size="icon-sm" aria-label={`Disconnect ${account.label}`} disabled={!!busy} onClick={() => { setBusy(detail.app); void disconnectIntegration(detail, account.id).then(refresh).catch((e) => toast.error(e.message)).finally(() => setBusy("")); }}><Trash2 size={16} /></Button>
+    </div>)}</div>
   </div>;
   const row = (item: Integration) => <div key={item.id} className="gx-app-row" role="button" tabIndex={0} onClick={() => nav(`/settings/apps/${encodeURIComponent(item.app)}`)} onKeyDown={(event) => { if (event.key === "Enter") nav(`/settings/apps/${encodeURIComponent(item.app)}`); }}>
     <span className="gx-logo"><IntegrationLogo item={item} size={30} /></span>
@@ -406,6 +419,7 @@ function Apps({ nav, appId }: { nav: Nav; appId?: string }) {
     <header className="gx-apps-head"><button type="button" className="gx-round" aria-label="Back" onClick={() => nav("/")}><ChevronLeft size={24} /></button><h1>Connect apps</h1><span className="gx-count">{count} connected</span></header>
     <div className="gx-chips">{cats.map((category) => <button type="button" key={category} data-active={cat === category || (category === "All" && cat === "Suggested")} onClick={() => setCat(category)}>{category}</button>)}</div>
     <div className="gx-apps-scroll">
+      {error && <p className="text-destructive p-4" role="alert">{error}</p>}
       {cat === "All" || cat === "Suggested" ? <>
         {!query && <><h3 className="gx-sec">For You <ChevronRight size={18} /></h3>{filtered.slice(0, 4).map(row)}<h3 className="gx-sec">Featured plugins <ChevronRight size={18} /></h3></>}
         {(query ? filtered : filtered.slice(4)).map(row)}

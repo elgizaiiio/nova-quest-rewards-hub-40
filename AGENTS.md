@@ -9,8 +9,9 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- The signed-in `/` and `/index` render the AgentHub bot/group home while `/chat` preserves the full primary-agent workspace. Hub-local groups map to real coordinator agents and account-scoped browser metadata; the existing animated AgentOrb remains the only bot character system. Why: deliver the Grok-style multi-bot home without forking chat transport or replacing established characters.
+- The signed-in `/` and `/index` render the AgentHub bot/group home while `/chat` preserves the full primary-agent workspace. Groups and their coordinator/member relationships persist through owner-scoped database access; browser metadata is reserved for local preferences. Why: groups created by bots and users share one source of truth.
 - Chat sends render optimistic user events and reconcile them by persisted message ID; history refreshes retain unconfirmed user events, and new-chat creation bridges its first message until history arrives. Why: prevent sent-message flicker during asynchronous saves and session creation.
+- Integration operations use verified user-owned Composio accounts and single-claim approval requests; background jobs deliver idempotently through persisted jobs/messages. Why: prevent cross-account actions, duplicate execution and lost results.
 
 - Generative UI: chat models answer with a ```ui JSON block validated by src/components/chat/genui/schema.ts and rendered by GenUIBlock; the prompt lives in genui/prompt.ts and is copied into supabase/functions/_shared/genui.ts (used by chat-fast and chat-alibaba; Deno cannot import src) — keep both in sync. ui blocks render outside the markdown pipeline so math/sanitize plugins cannot break them.
 - Chat HTML widgets: ```widget blocks render in a sandboxed iframe (allow-scripts only) via genui/HtmlWidget.tsx with a built-in stylesheet; replies go back through megsy.send/postMessage. Why: rich model-drawn UI without access to the app session.

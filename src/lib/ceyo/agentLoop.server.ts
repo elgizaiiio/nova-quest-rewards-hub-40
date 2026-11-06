@@ -134,7 +134,7 @@ export async function runAgentLoop(
     }
     answer += (answer && text ? "\n\n" : "") + text;
     const real = calls.filter(Boolean);
-    const steer = await poll().catch(() => [] as string[]);
+    const steer = await poll();
     if (!real.length) {
       if (!steer.length) return answer;
       if (text) messages.push({ role: "assistant", content: text });
@@ -146,12 +146,15 @@ export async function runAgentLoop(
       content: text || null,
       tool_calls: real.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.args || "{}" } })),
     });
-    for (const c of real) {
+    let redirected = false;
+    for (let index = 0; index < real.length; index++) {
+      const c = real[index];
       signal.throwIfAborted();
-      const updates = await poll();
+      const updates = index === 0 && steer.length ? steer : await poll();
       if (updates.length) {
-        for (const pending of real) messages.push({ role: "tool", tool_call_id: pending.id, content: "Not executed: new user instructions arrived. Reconsider before any action." });
+        for (const pending of real.slice(index)) messages.push({ role: "tool", tool_call_id: pending.id, content: "Not executed: new user instructions arrived. Reconsider before any action." });
         for (const update of updates) messages.push({ role: "user", content: update });
+        redirected = true;
         break;
       }
       let args: any = {};
@@ -164,7 +167,7 @@ export async function runAgentLoop(
       messages.push({ role: "tool", tool_call_id: c.id, content: result });
       if (c.name === "ask_user" || c.name === "connect_app" || c.name === "request_integration_action") return answer;
     }
-    for (const t of steer) messages.push({ role: "user", content: `(sent while you were working) ${t}` });
+    if (redirected) continue;
   }
   return answer;
 }

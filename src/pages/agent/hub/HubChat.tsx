@@ -41,6 +41,7 @@ import { orbStateFor, type AgentTurn } from "@/lib/agentsky/transcript";
 import { groupTranscript, type AgentGroup } from "./hubStorage";
 import { BotAvatar, HubSpinner, type HubLang } from "./HubParts";
 import { readReactions, writeReactions, REACTIONS } from "./chatPrefs";
+import { IntegrationApprovalCard } from "@/components/agent/IntegrationApprovalCard";
 
 type Bubble = {
   key: string;
@@ -263,6 +264,11 @@ export function HubChat({
   useEffect(() => { const el = scroller.current; if (el && pinned) el.scrollTop = el.scrollHeight; }, [s.turns, s.queue, pinned]);
   useEffect(() => { if (!demo && !s.running) void refreshSessions(); }, [s.running, demo]);
   useEffect(() => {
+    if (demo || !sessionId || s.running) return;
+    const timer = window.setInterval(() => window.dispatchEvent(new Event("ceyo-action-completed")), 5000);
+    return () => window.clearInterval(timer);
+  }, [demo, sessionId, s.running]);
+  useEffect(() => {
     const err = lastAgent?.error || s.error;
     if (err) setToast({ title: ar ? "البوت مقدرش يرد" : "Bot failed to respond", body: err, tone: "error" });
   }, [lastAgent?.error, s.error, ar]);
@@ -363,7 +369,7 @@ export function HubChat({
       <header className="cx-head">
         <button type="button" className="cx-circle cx-glass" aria-label={ar ? "رجوع" : "Back"} onClick={onBack}><ChevronLeft size={22} /></button>
         <button type="button" className="cx-title-pill cx-glass" onClick={onProfile}>
-          {group ? <span className="cx-stack">{group.memberIds.slice(0, 4).map((id) => agents.find((a) => a.id === id)).filter(Boolean).map((a) => <BotAvatar key={a!.id} agent={a!} size={22} />)}</span> : <BotAvatar agent={agent} size={24} state={s.running ? "thinking" : "idle"} />}
+          {group ? <span className="cx-stack">{group.memberIds.slice(0, 4).flatMap((id) => { const member = agents.find((a) => a.id === id); return member ? [<BotAvatar key={member.id} agent={member} size={22} />] : []; })}</span> : <BotAvatar agent={agent} size={24} state="idle" />}
           <strong dir="auto">{title}</strong>
         </button>
         <button type="button" className="cx-circle cx-glass cx-more" aria-label="Menu" onClick={() => setMenuOpen((o) => !o)}><MoreHorizontal size={20} /></button>
@@ -408,7 +414,7 @@ export function HubChat({
         onPointerUp={() => { swipeStart.current = null; setSwipe(0); }}
         onPointerCancel={() => { swipeStart.current = null; setSwipe(0); }}
       >
-        {empty ? (
+        {empty && !s.running && !starting ? (
           <div className="cx-empty">{(s.loading || starting) && <HubSpinner label={ar ? "لحظة…" : "One moment…"} />}</div>
         ) : (
           <div className="cx-column" style={{ transform: swipe ? `translateX(${ar ? -swipe : swipe}px)` : undefined, transition: swipe ? "none" : undefined }}>
@@ -438,7 +444,7 @@ export function HubChat({
                     </div>
                   ) : (
                     <div className="cx-row cx-row-agent">
-                      <div className="cx-avatar"><BotAvatar agent={b.speaker!} size={22} state={b.turnIndex === s.turns.length - 1 && b.lastPart ? orb : "idle"} /></div>
+                      <div className="cx-avatar"><BotAvatar agent={b.speaker || agent} size={22} state="idle" /></div>
                       <div className="cx-agent-body">
                         {(group || b.partIndex === 0) && <span className="cx-author" dir="auto">{b.speaker?.name || title}</span>}
                         {b.partIndex === 0 && b.turn.steps?.some((step: any) => step.kind !== "thought") && <StepTimeline steps={b.turn.steps.filter((step: any) => step.kind !== "thought")} lang={lang} />}
@@ -462,7 +468,8 @@ export function HubChat({
                           if (card.kind === "question") return <ChoiceCard key={card.id} question={card.question} options={card.options} allowFreeText={card.allowFreeText} answered={card.answered} ar={ar} onAnswer={(v) => s.send(v)} />;
                           if (card.kind === "widget") {
                             const d = (card.data || {}) as Record<string, any>;
-                            if (card.name === "connect_app") return <ConnectAppsCard key={card.id} apps={readConnectApps(d)} title={d.title || d.question} ar={ar} onAuthorize={() => nav("/settings/apps")} />;
+                            if (card.name === "connect_app") return <ConnectAppsCard key={card.id} apps={readConnectApps(d)} title={d.title || d.question} ar={ar} onAuthorize={(app) => nav(`/settings/apps/${encodeURIComponent(app.id || app.name.toLowerCase())}`)} />;
+                            if (card.name === "integration_approval") return <IntegrationApprovalCard key={card.id} data={d} onDone={() => window.dispatchEvent(new Event("ceyo-action-completed"))} />;
                             if (card.name === "secret" || card.name === "api_key") return <SecretCard key={card.id} name={String(d.name || d.title || "API key")} ar={ar} onOpen={() => nav("/settings/vault")} />;
                             if (card.name === "question" || card.name === "option_picker") {
                               const opts = (Array.isArray(d.options) ? d.options : Array.isArray(d.choices) ? d.choices : []).map((o: any) => typeof o === "string" ? o : String(o?.label ?? o?.name ?? o?.title ?? "")).filter(Boolean);

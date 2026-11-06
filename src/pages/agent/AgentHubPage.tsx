@@ -129,6 +129,7 @@ export default function AgentHubPage({ demo = false }: { demo?: boolean }) {
       void agentApi.groups().then((groups) => {
         if (!active) return;
         setLocal((current) => ({ ...current, groups: [...current.groups.filter((g) => g.id.startsWith("group-")), ...groups] }));
+        void loadWorkspace(true);
       }).catch(() => {});
     };
     refreshGroups();
