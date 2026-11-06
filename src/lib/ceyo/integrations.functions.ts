@@ -1,16 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { authenticate } from "./auth.server";
-import { accounts, composio, connectAccount, ownedAccount, executeAction } from "./composio.server";
 
 export const integrationAccounts = createServerFn({ method: "POST" }).handler(async () => {
+  const { authenticate } = await import("./auth.server");
+  const { accounts } = await import("./composio.server");
   const { userId } = await authenticate(getRequest());
   return { accounts: await accounts(userId) };
 });
 export const integrationConnect = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ app: z.string().min(1).max(100) }).parse(input))
   .handler(async ({ data }) => {
+    const { authenticate } = await import("./auth.server");
+    const { connectAccount } = await import("./composio.server");
     const request = getRequest();
     const { userId } = await authenticate(request);
     const origin = new URL(request.url).origin;
@@ -19,6 +21,8 @@ export const integrationConnect = createServerFn({ method: "POST" })
 export const integrationDisconnect = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ accountId: z.string().min(1).max(200) }).parse(input))
   .handler(async ({ data }) => {
+    const { authenticate } = await import("./auth.server");
+    const { ownedAccount, composio } = await import("./composio.server");
     const { userId } = await authenticate(getRequest());
     await ownedAccount(userId, data.accountId);
     await composio(`/connected_accounts/${encodeURIComponent(data.accountId)}`, "DELETE");
@@ -27,6 +31,8 @@ export const integrationDisconnect = createServerFn({ method: "POST" })
 export const integrationApproval = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid(), approved: z.boolean() }).parse(input))
   .handler(async ({ data }) => {
+    const { authenticate } = await import("./auth.server");
+    const { executeAction } = await import("./composio.server");
     const { db, userId } = await authenticate(getRequest());
     const { data: pending, error } = await db.from("agent_action_requests").select("*").eq("id", data.id).eq("user_id", userId).single();
     if (error || !pending) throw new Error("Request not found");
@@ -50,6 +56,7 @@ export const integrationApproval = createServerFn({ method: "POST" })
 export const integrationApprovalStatus = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
+    const { authenticate } = await import("./auth.server");
     const { db, userId } = await authenticate(getRequest());
     const { data: request, error } = await db.from("agent_action_requests").select("status").eq("id", data.id).eq("user_id", userId).single();
     if (error) throw new Error(error.message);

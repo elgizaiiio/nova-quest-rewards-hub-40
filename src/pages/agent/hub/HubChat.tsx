@@ -42,7 +42,6 @@ import { groupTranscript, type AgentGroup } from "./hubStorage";
 import { BotAvatar, HubSpinner, type HubLang } from "./HubParts";
 import { readReactions, writeReactions, REACTIONS } from "./chatPrefs";
 import { IntegrationApprovalCard } from "@/components/agent/IntegrationApprovalCard";
-import { onSessionChanged } from "@/lib/agentsky/client";
 
 type Bubble = {
   key: string;
@@ -265,6 +264,11 @@ export function HubChat({
   useEffect(() => { const el = scroller.current; if (el && pinned) el.scrollTop = el.scrollHeight; }, [s.turns, s.queue, pinned]);
   useEffect(() => { if (!demo && !s.running) void refreshSessions(); }, [s.running, demo]);
   useEffect(() => {
+    if (demo || !sessionId || s.running) return;
+    const timer = window.setInterval(() => window.dispatchEvent(new Event("ceyo-action-completed")), 5000);
+    return () => window.clearInterval(timer);
+  }, [demo, sessionId, s.running]);
+  useEffect(() => {
     const err = lastAgent?.error || s.error;
     if (err) setToast({ title: ar ? "البوت مقدرش يرد" : "Bot failed to respond", body: err, tone: "error" });
   }, [lastAgent?.error, s.error, ar]);
@@ -365,7 +369,7 @@ export function HubChat({
       <header className="cx-head">
         <button type="button" className="cx-circle cx-glass" aria-label={ar ? "رجوع" : "Back"} onClick={onBack}><ChevronLeft size={22} /></button>
         <button type="button" className="cx-title-pill cx-glass" onClick={onProfile}>
-          {group ? <span className="cx-stack">{group.memberIds.slice(0, 4).map((id) => agents.find((a) => a.id === id)).filter(Boolean).map((a) => <BotAvatar key={a!.id} agent={a!} size={22} />)}</span> : <BotAvatar agent={agent} size={24} state={s.running ? "thinking" : "idle"} />}
+          {group ? <span className="cx-stack">{group.memberIds.slice(0, 4).flatMap((id) => { const member = agents.find((a) => a.id === id); return member ? [<BotAvatar key={member.id} agent={member} size={22} />] : []; })}</span> : <BotAvatar agent={agent} size={24} state="idle" />}
           <strong dir="auto">{title}</strong>
         </button>
         <button type="button" className="cx-circle cx-glass cx-more" aria-label="Menu" onClick={() => setMenuOpen((o) => !o)}><MoreHorizontal size={20} /></button>
