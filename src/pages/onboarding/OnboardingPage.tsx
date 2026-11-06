@@ -68,55 +68,55 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="cc" dir="rtl">
-      <header className="cc-top">
-        <span className="cc-logo">Ceyo</span>
-        <div className="cc-dots">{[0, 1, 2].map((d) => <span key={d} className={`cc-dot ${d === step ? "on" : ""}`} />)}</div>
+    <div className="cz" dir="rtl">
+      <header className="cz-top">
+        <span className="cz-logo">Ceyo</span>
+        <div className="cz-dots">{[0, 1, 2].map((d) => <span key={d} className={`cz-dot ${d === step ? "on" : ""}`} />)}</div>
       </header>
-      <main className="cc-main">
+      <main className="cz-main">
         {step === 0 && (
           <>
-            <h1 className="cc-h1">عرّفنا بنفسك</h1>
-            <div className="cc-card">
-              <button type="button" className="cc-avatar" onClick={() => file.current?.click()} aria-label="صورتك">
+            <h1 className="cz-h1">عرّفنا بنفسك</h1>
+            <div className="cz-card">
+              <button type="button" className="cz-avatar" onClick={() => file.current?.click()} aria-label="صورتك">
                 {avatar ? <img src={avatar} alt="" /> : <Camera size={28} />}
               </button>
               <input ref={file} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) setAvatar(await toAvatar(f)); }} />
-              <label className="cc-label">اسمك</label>
-              <input className="cc-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="اسمك" />
-              <label className="cc-label">عمرك</label>
-              <input className="cc-input" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 3))} placeholder="مثلاً 24" />
-              {age && (ageN < 13 || ageN > 120) && <span className="cc-err">لازم العمر يكون من 13 لـ 120</span>}
+              <label className="cz-label">اسمك</label>
+              <input className="cz-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="اسمك" />
+              <label className="cz-label">عمرك</label>
+              <input className="cz-input" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 3))} placeholder="مثلاً 24" />
+              {age && (ageN < 13 || ageN > 120) && <span className="cz-err">لازم العمر يكون من 13 لـ 120</span>}
             </div>
-            <button className="cc-btn" disabled={!ok0} onClick={() => setStep(1)}>التالي</button>
+            <button className="cz-btn" disabled={!ok0} onClick={() => setStep(1)}>التالي</button>
           </>
         )}
         {step === 1 && (
           <>
-            <h1 className="cc-h1">إنت بتشتغل في إيه؟</h1>
-            <p className="cc-sub">عشان نظبط بوتاتك على مقاسك.</p>
-            <div className="cc-opts">
+            <h1 className="cz-h1">إنت بتشتغل في إيه؟</h1>
+            <p className="cz-sub">عشان نظبط بوتاتك على مقاسك.</p>
+            <div className="cz-opts">
               {TYPES.map(({ id, t, I }) => (
-                <button key={id} className={`cc-opt ${type === id ? "on" : ""}`} onClick={() => setType(id)}><I size={22} />{t}</button>
+                <button key={id} className={`cz-opt ${type === id ? "on" : ""}`} onClick={() => setType(id)}><I size={22} />{t}</button>
               ))}
             </div>
-            <button className="cc-btn" disabled={!type} onClick={() => setStep(2)}>التالي</button>
-            <button className="cc-link" onClick={() => setStep(0)}>رجوع</button>
+            <button className="cz-btn" disabled={!type} onClick={() => setStep(2)}>التالي</button>
+            <button className="cz-link" onClick={() => setStep(0)}>رجوع</button>
           </>
         )}
         {step === 2 && (
           <>
-            <h1 className="cc-h1">اعمل بوتك الأساسي</h1>
-            <p className="cc-sub">ده هيكون مساعدك الرئيسي، وتقدر تغيّره بعدين.</p>
-            <div className="cc-card">
-              <label className="cc-label">اسم البوت</label>
-              <input className="cc-input" value={botName} onChange={(e) => setBotName(e.target.value)} placeholder="مثلاً: نور" maxLength={40} />
-              <label className="cc-label">عايزه يساعدك في إيه؟</label>
-              <textarea className="cc-input" rows={3} value={botDesc} onChange={(e) => setBotDesc(e.target.value)} placeholder="مثلاً: يساعدني في البرمجة وتنظيم يومي" maxLength={500} />
-              {err && <span className="cc-err">{err}</span>}
+            <h1 className="cz-h1">اعمل بوتك الأساسي</h1>
+            <p className="cz-sub">ده هيكون مساعدك الرئيسي، وتقدر تغيّره بعدين.</p>
+            <div className="cz-card">
+              <label className="cz-label">اسم البوت</label>
+              <input className="cz-input" value={botName} onChange={(e) => setBotName(e.target.value)} placeholder="مثلاً: نور" maxLength={40} />
+              <label className="cz-label">عايزه يساعدك في إيه؟</label>
+              <textarea className="cz-input" rows={3} value={botDesc} onChange={(e) => setBotDesc(e.target.value)} placeholder="مثلاً: يساعدني في البرمجة وتنظيم يومي" maxLength={500} />
+              {err && <span className="cz-err">{err}</span>}
             </div>
-            <button className="cc-btn" disabled={busy || botName.trim().length < 2} onClick={finish}>{busy ? "جاري الإنشاء…" : "ابدأ"}</button>
-            <button className="cc-link" onClick={() => setStep(1)}>رجوع</button>
+            <button className="cz-btn" disabled={busy || botName.trim().length < 2} onClick={finish}>{busy ? "جاري الإنشاء…" : "ابدأ"}</button>
+            <button className="cz-link" onClick={() => setStep(1)}>رجوع</button>
           </>
         )}
       </main>

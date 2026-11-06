@@ -20,20 +20,20 @@ export default function CeyoLanding() {
   const [i, setI] = useState(0);
   const next = () => (i < 1 ? setI(i + 1) : nav("/auth"));
   return (
-    <div className="cc" dir="rtl">
-      <header className="cc-top">
-        <span className="cc-logo">Ceyo</span>
-        <button className="cc-link" onClick={() => nav("/auth")}>تخطي</button>
+    <div className="cz" dir="rtl">
+      <header className="cz-top">
+        <span className="cz-logo">Ceyo</span>
+        <button className="cz-link" onClick={() => nav("/auth")}>تخطي</button>
       </header>
-      <main className="cc-main">
+      <main className="cz-main">
         {i === 0 ? (
           <>
             <Sparkles size={34} />
-            <h1 className="cc-h1">بوتاتك الذكية<br />لكل مهامك</h1>
-            <p className="cc-sub">اصنع فريقك من البوتات، وخليهم يشتغلوا معاك في مكان واحد هادي.</p>
-            <div className="cc-chips" aria-hidden>
+            <h1 className="cz-h1">بوتاتك الذكية<br />لكل مهامك</h1>
+            <p className="cz-sub">اصنع فريقك من البوتات، وخليهم يشتغلوا معاك في مكان واحد هادي.</p>
+            <div className="cz-chips" aria-hidden>
               {chips.map(({ t, I, bg, fg, x, y, r }, k) => (
-                <span key={t} className="cc-chip" style={{ background: bg, color: fg, insetInlineStart: x, top: y, rotate: `${r}deg`, animationDelay: `${k * 0.4}s` }}>
+                <span key={t} className="cz-chip" style={{ background: bg, color: fg, insetInlineStart: x, top: y, rotate: `${r}deg`, animationDelay: `${k * 0.4}s` }}>
                   <I size={18} />{t}
                 </span>
               ))}
@@ -41,16 +41,16 @@ export default function CeyoLanding() {
           </>
         ) : (
           <>
-            <h1 className="cc-h1">اربط <span className="cc-pill">كل</span><br />أدواتك المفضلة</h1>
-            <p className="cc-sub">بوتاتك تقدر تشتغل على تطبيقاتك وتنفذ عنك.</p>
-            <div className="cc-grid" aria-hidden>{apps.map((a) => <div key={a} className="cc-tile">{a}</div>)}</div>
+            <h1 className="cz-h1">اربط <span className="cz-pill">كل</span><br />أدواتك المفضلة</h1>
+            <p className="cz-sub">بوتاتك تقدر تشتغل على تطبيقاتك وتنفذ عنك.</p>
+            <div className="cz-grid" aria-hidden>{apps.map((a) => <div key={a} className="cz-tile">{a}</div>)}</div>
           </>
         )}
       </main>
-      <footer className="cc-main" style={{ flex: "none", paddingBottom: 32 }}>
-        <div className="cc-dots">{[0, 1].map((d) => <span key={d} className={`cc-dot ${d === i ? "on" : ""}`} />)}</div>
-        <button className="cc-btn" onClick={next}>{i < 1 ? "التالي" : "ابدأ الآن"}</button>
-        <button className="cc-link" onClick={() => nav("/auth")}>عندي حساب؟ سجّل دخول</button>
+      <footer className="cz-main" style={{ flex: "none", paddingBottom: 32 }}>
+        <div className="cz-dots">{[0, 1].map((d) => <span key={d} className={`cz-dot ${d === i ? "on" : ""}`} />)}</div>
+        <button className="cz-btn" onClick={next}>{i < 1 ? "التالي" : "ابدأ الآن"}</button>
+        <button className="cz-link" onClick={() => nav("/auth")}>عندي حساب؟ سجّل دخول</button>
       </footer>
     </div>
   );

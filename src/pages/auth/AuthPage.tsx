@@ -59,36 +59,36 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="cc" dir="rtl">
-      <header className="cc-top">
-        <span className="cc-logo">Ceyo</span>
-        {step === "code" && <button className="cc-link" onClick={() => setStep("email")}><ArrowRight size={18} /></button>}
+    <div className="cz" dir="rtl">
+      <header className="cz-top">
+        <span className="cz-logo">Ceyo</span>
+        {step === "code" && <button className="cz-link" onClick={() => setStep("email")}><ArrowRight size={18} /></button>}
       </header>
-      <main className="cc-main">
+      <main className="cz-main">
         {step === "email" ? (
           <>
-            <h1 className="cc-h1">أهلاً بيك</h1>
-            <p className="cc-sub">اكتب بريدك وهنبعتلك كود دخول. لو جديد هنعملك حساب.</p>
-            <form className="cc-card" onSubmit={(e) => { e.preventDefault(); send(); }} style={{ display: "grid", gap: 12 }}>
-              <input className="cc-input" type="email" dir="ltr" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
-              {err && <span className="cc-err">{err}</span>}
-              <button className="cc-btn" disabled={busy || !email}>{busy ? "جاري الإرسال…" : "ابعت الكود"}</button>
+            <h1 className="cz-h1">أهلاً بيك</h1>
+            <p className="cz-sub">اكتب بريدك وهنبعتلك كود دخول. لو جديد هنعملك حساب.</p>
+            <form className="cz-card" onSubmit={(e) => { e.preventDefault(); send(); }} style={{ display: "grid", gap: 12 }}>
+              <input className="cz-input" type="email" dir="ltr" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+              {err && <span className="cz-err">{err}</span>}
+              <button className="cz-btn" disabled={busy || !email}>{busy ? "جاري الإرسال…" : "ابعت الكود"}</button>
             </form>
-            <p className="cc-sub" style={{ fontSize: 12 }}>بالمتابعة أنت موافق على <a href="/terms">الشروط</a> و<a href="/privacy">الخصوصية</a></p>
+            <p className="cz-sub" style={{ fontSize: 12 }}>بالمتابعة أنت موافق على <a href="/terms">الشروط</a> و<a href="/privacy">الخصوصية</a></p>
           </>
         ) : (
           <>
-            <h1 className="cc-h1">اكتب الكود</h1>
-            <p className="cc-sub">بعتنا كود من {LEN} أرقام على <b dir="ltr">{email}</b></p>
-            <div className="cc-otp">
+            <h1 className="cz-h1">اكتب الكود</h1>
+            <p className="cz-sub">بعتنا كود من {LEN} أرقام على <b dir="ltr">{email}</b></p>
+            <div className="cz-otp">
               {code.map((c, i) => (
                 <input key={i} ref={(el) => { refs.current[i] = el; }} inputMode="numeric" autoComplete={i === 0 ? "one-time-code" : "off"} maxLength={LEN} value={c} disabled={busy}
                   onChange={(e) => setDigit(i, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Backspace" && !code[i] && i > 0) refs.current[i - 1]?.focus(); }} />
               ))}
             </div>
-            {err && <span className="cc-err">{err}</span>}
-            <button className="cc-btn cc-btn-ghost" disabled={wait > 0 || busy} onClick={send}>{wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : "ابعت الكود تاني"}</button>
+            {err && <span className="cz-err">{err}</span>}
+            <button className="cz-btn cz-btn-ghost" disabled={wait > 0 || busy} onClick={send}>{wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : "ابعت الكود تاني"}</button>
           </>
         )}
       </main>
