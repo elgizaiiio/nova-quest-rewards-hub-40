@@ -46,10 +46,12 @@ export const Route = createFileRoute("/api/ceyo-chat")({ server: { handlers: {
         const tools = workspaceTools({ db, userId, botId: conv.bot_id, conversationId: conv.id, primary, emit, signal: request.signal, poll });
         tools.push({ name: "start_long_task", def: { type: "function", function: { name: "start_long_task", description: "Run a long job in the background if the app is synchronized, otherwise execute it here.", parameters: { type: "object", properties: { goal: { type: "string" } }, required: ["goal"] } } }, run: async (args: unknown) => {
           const { goal } = z.object({ goal: z.string().min(1).max(4000) }).parse(args);
-          if (await backgroundReady()) {
-            const id = await startLongTask({ system, goal, userId, conversationId: conv.id, botId: conv.bot_id, cursorAt: lastSeen });
-            return `Background job started (${id}); the result will be saved to this chat.`;
-          }
+          try {
+            if (await backgroundReady()) {
+              const id = await startLongTask({ system, goal, userId, conversationId: conv.id, botId: conv.bot_id, cursorAt: lastSeen });
+              return `Background job started (${id}); the result will be saved to this chat.`;
+            }
+          } catch { console.error("Background start unavailable; continuing inline"); }
           return runAgentLoop(system, [{ role: "user", content: goal }], emit, request.signal, poll, { maxSteps: 20, extras: tools.filter((t) => t.name !== "start_long_task") });
         } });
         const text = await runAgentLoop(system, history, emit, request.signal, poll, { extras: tools, maxSteps: 12 });
