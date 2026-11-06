@@ -42,16 +42,18 @@ export const integrationApproval = createServerFn({ method: "POST" })
     if (claimError) throw new Error(claimError.message);
     if (!claimed?.length) return { status: "running" };
     if (!data.approved) return { status: "rejected" };
+    let result;
     try {
-      const result = await executeAction(userId, { account_id: pending.account_id, tool_slug: pending.tool_slug, arguments: pending.arguments });
-      const { error: writeError } = await supabaseAdmin.from("agent_action_requests").update({ status: "completed", result }).eq("id", pending.id).eq("user_id", userId);
-      if (writeError) throw new Error(writeError.message);
-      await db.from("messages").insert({ user_id: userId, conversation_id: pending.conversation_id, role: "assistant", content: `${pending.tool_slug.replace(/_/g, " ")}: completed.\n${JSON.stringify(result.data || result).slice(0, 6000)}`, metadata: { action_id: pending.id } });
-      return { status: "completed" };
+      result = await executeAction(userId, { account_id: pending.account_id, tool_slug: pending.tool_slug, arguments: pending.arguments });
     } catch (error) {
       await supabaseAdmin.from("agent_action_requests").update({ status: "failed" }).eq("id", pending.id).eq("user_id", userId);
       throw error;
     }
+    const { error: writeError } = await supabaseAdmin.from("agent_action_requests").update({ status: "completed", result }).eq("id", pending.id).eq("user_id", userId);
+    if (writeError) throw new Error("The action ran, but its receipt could not be saved. Do not repeat the action.");
+    const { error: deliveryError } = await db.from("messages").upsert({ id: pending.id, user_id: userId, conversation_id: pending.conversation_id, role: "assistant", content: `${pending.tool_slug.replace(/_/g, " ")}: completed.\n${JSON.stringify(result.data || result).slice(0, 6000)}`, metadata: { action_id: pending.id } }, { onConflict: "id", ignoreDuplicates: true });
+    if (deliveryError) throw new Error("The action completed, but its chat receipt could not be saved.");
+    return { status: "completed" };
   });
 export const integrationApprovalStatus = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))

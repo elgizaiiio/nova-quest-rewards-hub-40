@@ -9,8 +9,8 @@ export async function composio(path: string, method = "GET", body?: unknown) {
   if (!key) throw new Error("Composio is not configured");
   const response = await fetch(`${BASE}${path}`, { method, headers: { "x-api-key": key, "Content-Type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}) });
   if (!response.ok) {
-    const error = await response.text();
-    console.error(`Composio [${response.status}]: ${error}`);
+    await response.text();
+    console.error(`Composio request failed [${response.status}]`);
     throw new Error(response.status === 401 ? "Composio needs a valid project API key" : `Composio request failed (${response.status})`);
   }
   return response.status === 204 ? {} : response.json();
