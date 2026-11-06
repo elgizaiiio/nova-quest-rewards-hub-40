@@ -126,11 +126,6 @@ const AuthPage = () => {
   // so `?redirect=https://evil.com` can no longer phish OAuth tokens.
   const redirectUrl = safeInternalPath(searchParams.get("redirect"));
 
-  const invokeAuth = (body: Record<string, unknown>) =>
-    invokeFunction("openrouter-media", { body: { kind: "auth", ...body } });
-
-  const [referralCode, setReferralCode] = useState<string>("");
-  const [showReferralField, setShowReferralField] = useState<boolean>(!!referralCode);
 
   useEffect(() => forceDarkTheme(), []);
 
@@ -854,53 +849,6 @@ const AuthPage = () => {
                           inputMode="email"
                           className={inputCls}
                         />
-
-                        {/* Invite code — auto-shown when user lands via /ref/:code, editable */}
-                        {showReferralField ? (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <label className="text-[11px] text-foreground/55 uppercase tracking-[0.18em]">
-                                {authT("inviteCode")}
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setReferralCode("");
-                                  setShowReferralField(false);
-                                }}
-                                className="text-[11px] text-foreground/65 hover:text-foreground/80 transition-colors"
-                              >
-                                {authT("remove")}
-                              </button>
-                            </div>
-                            <input
-                              type="text"
-                              placeholder="NOVA-XXXXXX"
-                              value={referralCode}
-                              onChange={(e) =>
-                                setReferralCode(e.target.value.toUpperCase().slice(0, 64))
-                              }
-                              autoComplete="off"
-                              spellCheck={false}
-                              className={`${inputCls} font-mono tracking-wider`}
-                            />
-                            {referralCode && (
-                              <p className="text-[11px] text-foreground/65">
-                                {authT("invitedByPrefix")}
-                                <span className="text-foreground/75 font-mono">{referralCode}</span>
-                                {authT("invitedBySuffix")}
-                              </p>
-                            )}
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setShowReferralField(true)}
-                            className="text-[12px] text-foreground/55 hover:text-foreground transition-colors"
-                          >
-                            {authT("haveInviteCode")}
-                          </button>
-                        )}
 
                         <button
                           onClick={handleCheckEmail}

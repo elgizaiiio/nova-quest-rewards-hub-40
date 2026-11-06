@@ -1,6 +1,7 @@
 /** @doc Mobile auth extra screens (OTP, set/reset password, forgot) — clean black Ceyo layout. */
 import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
 import { useRef } from "react";
+import "@/styles/auth-extras.css";
 import { t as authT, tf as authTf, useUserLang } from "@/lib/authI18n";
 
 type ExtraScreen = "otp-signup" | "otp-2fa" | "otp-reset" | "set-password" | "reset-password" | "forgot-password";
