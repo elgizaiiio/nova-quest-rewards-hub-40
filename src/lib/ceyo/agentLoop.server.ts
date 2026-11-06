@@ -1,6 +1,7 @@
 /** @doc Bot reply loop: Cerebras streams the answer and may call web tools (Browserbase) several times before it finishes. */
 const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
-const MODEL = "gpt-oss-120b";
+/** Cheapest + fastest model on Cerebras (Qwen). */
+const MODEL = "qwen-3.8-27b";
 const MAX_STEPS = 8;
 
 export type LoopEvent = Record<string, unknown> & { id: string; type: string };
@@ -74,6 +75,8 @@ export async function runAgentLoop(
   history: Msg[],
   emit: (e: LoopEvent) => void,
   signal: AbortSignal,
+  /** New user messages sent while the bot is working; they steer the same run. */
+  poll: () => Promise<string[]> = async () => [],
 ): Promise<string> {
   const key = process.env.CEREBRAS_API_KEY;
   if (!key) throw new Error("AI is not configured");
@@ -86,7 +89,7 @@ export async function runAgentLoop(
       method: "POST",
       signal,
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, messages, tools, stream: true, reasoning_effort: "low" }),
+      body: JSON.stringify({ model: MODEL, messages, tools, stream: true }),
     });
     if (!res.ok || !res.body) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const reader = res.body.getReader();
@@ -126,7 +129,13 @@ export async function runAgentLoop(
     }
     answer += (answer && text ? "\n\n" : "") + text;
     const real = calls.filter(Boolean);
-    if (!real.length) return answer;
+    const steer = await poll().catch(() => [] as string[]);
+    if (!real.length) {
+      if (!steer.length) return answer;
+      if (text) messages.push({ role: "assistant", content: text });
+      for (const t of steer) messages.push({ role: "user", content: t });
+      continue;
+    }
     messages.push({
       role: "assistant",
       content: text || null,
@@ -142,6 +151,7 @@ export async function runAgentLoop(
       emit({ id: `${c.id}-res`, type: "agent.tool_result", part: { type: "tool_result", call_id: c.id, tool_name: c.name, status, result: result.slice(0, 500) } });
       messages.push({ role: "tool", tool_call_id: c.id, content: result });
     }
+    for (const t of steer) messages.push({ role: "user", content: `(sent while you were working) ${t}` });
   }
   return answer;
 }
