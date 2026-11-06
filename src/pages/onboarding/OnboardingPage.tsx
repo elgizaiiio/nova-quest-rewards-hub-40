@@ -1,7 +1,7 @@
 /** First-run setup: profile → what you do → create your primary bot. */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Code2, Palette, GraduationCap, Briefcase, Clapperboard, HelpCircle, ArrowLeft } from "lucide-react";
+import { Camera, User, Code2, Palette, GraduationCap, Briefcase, Clapperboard, HelpCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { forceDarkTheme } from "@/lib/theme";
 import { AgentForm, type AgentFormValue } from "@/pages/agent/hub/HubPanels";
@@ -116,7 +116,7 @@ export default function OnboardingPage() {
             <h1>Tell us about you</h1>
             <p className="ob-sub">So your bots know who they're helping.</p>
             <button type="button" className="ob-photo" onClick={() => file.current?.click()} aria-label="Your photo">
-              {avatar ? <img src={avatar} alt="" /> : <span className="ob-initial">{name.trim()[0]?.toUpperCase() || <Camera size={26} />}</span>}
+              {avatar ? <img src={avatar} alt="" /> : <span className="ob-initial">{name.trim()[0]?.toUpperCase() || <User size={34} />}</span>}
               <span className="ob-photo-badge"><Camera size={14} /></span>
             </button>
             <input ref={file} type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) setAvatar(await toAvatar(f)); }} />
