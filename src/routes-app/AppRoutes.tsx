@@ -20,6 +20,7 @@ import {
 } from "./lazyPages";
 
 const CeyoLanding = lazy(() => import("@/pages/ceyo/CeyoLanding"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding/OnboardingPage"));
 const CeyoSettings = lazy(() => import("@/pages/ceyo/CeyoSettings"));
 
 const guard = (el: React.ReactNode, guest?: string) => <ProtectedRoute guestEntry={guest}>{el}</ProtectedRoute>;
@@ -32,6 +33,7 @@ export const AppRoutes = (_props: { currentUserId: string | null }) => (
     <Route path="/index" element={guard(<AgentHubPage />, "/welcome")} />
     <Route path="/welcome" element={<CeyoLanding />} />
     <Route path="/landing" element={<CeyoLanding />} />
+    <Route path="/onboarding" element={guard(<OnboardingPage />)} />
 
     <Route element={<AnimatedShell />}>
       <Route path="/auth" element={<AuthPage />} />
