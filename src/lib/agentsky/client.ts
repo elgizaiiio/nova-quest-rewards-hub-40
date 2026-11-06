@@ -224,6 +224,11 @@ export const agentApi = {
         const imgs: string[] = Array.isArray(m.metadata?.images) ? m.metadata.images : [];
         events.push({ id: m.id, type: "user.message", at: m.created_at, content: [{ type: "text", text: m.content }, ...imgs.map((url) => ({ type: "image", source: { type: "url", url } }))] });
       } else {
+        if (Array.isArray(m.metadata?.transcript)) {
+          events.push(...m.metadata.transcript);
+          events.push({ id: m.id + "-idle", type: "session.status_idle", stop_reason: { type: "end_turn" } });
+          continue;
+        }
         events.push({ id: m.id + "-run", type: "session.status_running" });
         for (const e of (m.metadata?.events ?? []) as RawEvent[]) events.push({ ...e, id: m.id + e.id });
         events.push({ id: m.id + "-t", type: "agent.message", parts: [{ type: "text", text: m.content, stream_id: m.id }] });
