@@ -32,3 +32,13 @@
 .ob-bot .gx-create-cta{position:static !important;width:100%;margin:auto 0 0 !important;height:56px;border-radius:999px;background:#fff !important;color:#000 !important}
 .ob-bot .gx-create-cta:disabled{opacity:.25}
 .ob-bot .gx-create,.ob-bot .gx-create-body,.ob-bot .gx-create-preview{overflow:visible !important}.ob-bot .gx-create-preview{padding-top:6px}
+/* Compact main-bot step so it fits without scrolling */
+.ob-main.ob-bot{padding-top:8px}
+.ob-main.ob-bot .ob-sub{margin-bottom:14px}
+.ob-bot .gx-create-preview{margin-bottom:16px !important}
+.ob-bot .gx-create-preview>*{transform:scale(.8);transform-origin:center}
+.ob-bot .gx-name{height:50px !important;font-size:17px !important}
+.ob-bot .gx-shapes{gap:6px 10px !important;margin:16px 0 14px !important}
+.ob-bot .gx-shapes button{width:50px !important;height:50px !important}
+.ob-bot .gx-shapes button>*{transform:scale(.85)}
+.ob-bot .gx-create-cta{margin-top:18px !important}
