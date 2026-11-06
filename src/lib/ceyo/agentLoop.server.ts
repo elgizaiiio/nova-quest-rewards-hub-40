@@ -1,7 +1,7 @@
 /** @doc Bot reply loop: Cerebras streams the answer and may call web tools (Browserbase) several times before it finishes. */
 const CEREBRAS_URL = "https://api.cerebras.ai/v1/chat/completions";
-/** Cheapest + fastest model on Cerebras (Qwen). */
-const MODEL = "qwen-3.8-27b";
+/** Cheapest + fastest model on Cerebras. */
+const MODEL = "gpt-oss-120b";
 const MAX_STEPS = 8;
 
 export type LoopEvent = Record<string, unknown> & { id: string; type: string };
@@ -89,7 +89,7 @@ export async function runAgentLoop(
       method: "POST",
       signal,
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: MODEL, messages, tools, stream: true }),
+      body: JSON.stringify({ model: MODEL, messages, tools, stream: true, reasoning_effort: "low" }),
     });
     if (!res.ok || !res.body) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const reader = res.body.getReader();
