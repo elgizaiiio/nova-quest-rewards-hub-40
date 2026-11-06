@@ -179,15 +179,12 @@ const AuthPage = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await invokeAuth({ action: "check-email", email: normalizedEmail });
-      if (error) throw new Error(error.message);
-      if (typeof data?.exists !== "boolean") throw new Error(data?.error || "Could not check your email. Please try again.");
       setEmail(normalizedEmail);
-      setUserExists(data.exists);
-      setHas2FA(data.two_factor_enabled === true);
+      setUserExists(false);
+      setHas2FA(false);
       setPassword("");
       setNewPassword("");
-      setStep(data.exists ? "password" : "create-password");
+      setStep("password");
     } catch (e: any) {
       notifyMobileIntroError(translateAuthError(e, "couldNotSendCode"));
     } finally {
@@ -199,9 +196,8 @@ const AuthPage = () => {
     const normalizedEmail = (targetEmail || email).trim().toLowerCase();
     setIsSubmitting(true);
     try {
-      const { data, error } = await invokeAuth({ action: "send-otp", email: normalizedEmail });
+      const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { shouldCreateUser: false } });
       if (error) throw new Error(error.message);
-      if (!data?.success) throw new Error(data?.error || "Failed to send code");
       toast.success(authT("otpSent"));
       startCountdown();
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
@@ -236,14 +232,14 @@ const AuthPage = () => {
 
       if (error) throw error;
       const mfa = await getMfaRedirect(
-        redirectUrl || pathForZone("/chat", window.location.pathname),
+        redirectUrl || "/",
       );
       if (mfa) {
         navigate(mfa);
         return;
       }
       if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
-      else navigate(pathForZone("/chat", window.location.pathname));
+      else navigate("/");
     } catch (e: any) {
       const msg = String(e?.message || "");
       if (/failed to (send|fetch)|network|load failed|networkerror/i.test(msg)) {
@@ -266,12 +262,8 @@ const AuthPage = () => {
           const noAccountMsg = authT("noAccountFound");
           if (isMobileIntroStep(step)) setMobileError(noAccountMsg);
           else toast.message(noAccountMsg);
-          try {
-            await sendOTP(undefined, true);
-            setStep("otp-signup");
-          } catch {
-            notifyMobileIntroError(translateAuthError(e, "loginFailed"));
-          }
+          setNewPassword(password);
+          setStep("create-password");
         }
       } else {
         notifyMobileIntroError(translateAuthError(e, "loginFailed"));
@@ -289,13 +281,8 @@ const AuthPage = () => {
       notifyMobileIntroError(firstError(parsed) ?? authT("passwordMinLength"));
       return;
     }
-    try {
-      await sendOTP(email, true);
-      setOtpValues(["", "", "", "", "", ""]);
-      setStep("otp-signup");
-    } catch (error) {
-      notifyMobileIntroError(translateAuthError(error, "couldNotSendCode"));
-    }
+    // Testing phase: no email code — create the account and sign in directly.
+    await handleCreateAccount();
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -445,17 +432,16 @@ const AuthPage = () => {
   const handleVerifyOTP = async (code: string) => {
     setIsSubmitting(true);
     try {
-      const { data, error } = await invokeAuth({
-        action: "verify-otp",
+      const { error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
-        code,
+        token: code,
+        type: "email",
       });
       if (error) throw new Error(error.message);
-      if (!data?.success) throw new Error(data?.error || "Invalid code");
 
       if (step === "otp-2fa") {
         if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
-        else navigate(pathForZone("/chat", window.location.pathname));
+        else navigate("/");
       } else if (step === "otp-reset") {
         setVerifiedResetCode(code);
         setStep("reset-password");
@@ -476,7 +462,7 @@ const AuthPage = () => {
             password: newPassword,
           });
           if (!signInErr) {
-            const target = redirectUrl || pathForZone("/chat", window.location.pathname);
+            const target = redirectUrl || "/";
             const mfa = await getMfaRedirect(target);
             if (mfa) navigate(mfa);
             else if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
@@ -509,108 +495,26 @@ const AuthPage = () => {
     setIsSubmitting(true);
 
     try {
-      const cleanReferral = referralCode.trim().toUpperCase().slice(0, 64) || null;
-
       const normalizedEmail = email.trim().toLowerCase();
       setPayRegion(region);
-      const { data, error } = await invokeAuth({
-        action: "signup",
-        email: normalizedEmail,
-        password: newPassword,
-      });
-      const signupFailure = error ? String(error.message || "") : !data?.success ? String(data?.error || "") : "";
-      const alreadyRegistered = /already (been )?(registered|exists)|already exists/i.test(signupFailure);
-      if (error && !alreadyRegistered) throw new Error(error.message);
-
-      // Account already exists (e.g. preview proxy skipped check-email and routed
-      // an existing user into signup). Try signing them in instead; otherwise
-      // bounce them back to the password screen with a friendly message.
-      if (alreadyRegistered) {
-        let { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password: newPassword,
-        });
-        // The email code was just verified, so the person owns this inbox:
-        // set the password they chose on the existing account, then sign in.
-        if (signInErr && afterVerification) {
-          const { data: upd, error: updErr } = await invokeAuth({
-            action: "update-password",
-            email: normalizedEmail,
-            password: newPassword,
-          });
-          if (!updErr && upd?.success) {
-            ({ error: signInErr } = await supabase.auth.signInWithPassword({
-              email: normalizedEmail,
-              password: newPassword,
-            }));
-          }
-        }
-        if (!signInErr) {
-          const mfa = await getMfaRedirect(
-            redirectUrl || pathForZone("/chat", window.location.pathname),
-          );
-          if (mfa) {
-            navigate(mfa);
-            return;
-          }
-          if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
-          else navigate(pathForZone("/chat", window.location.pathname));
-          return;
-        }
+      const { data, error } = await supabase.auth.signUp({ email: normalizedEmail, password: newPassword });
+      if (error && /already (been )?(registered|exists)/i.test(error.message)) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: newPassword });
+        if (!signInErr) { navigate("/"); return; }
         setUserExists(true);
         setStep("password");
         setPassword("");
-        toast.message(authT("emailExists"), {
-          description: authT("emailExistsDesc"),
-        });
+        toast.message(authT("emailExists"), { description: authT("emailExistsDesc") });
         return;
       }
-
-      if (!data?.success) throw new Error(data?.error || "Could not create account");
-
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: newPassword,
-      });
-      if (signInErr) throw signInErr;
-
-      if (cleanReferral) {
-        try {
-          const { data: u } = await supabase.auth.getUser();
-          if (u?.user?.id) {
-            // Mark the click as converted
-            const { data: lastClick } = await supabase
-              .from("referral_clicks")
-              .select("id")
-              .eq("code", cleanReferral)
-              .is("converted_user_id", null)
-              .order("created_at", { ascending: false })
-              .limit(1);
-            if (lastClick && lastClick.length > 0) {
-              await supabase
-                .from("referral_clicks")
-                .update({
-                  converted_user_id: u.user.id,
-                  converted_at: new Date().toISOString(),
-                })
-                .eq("id", lastClick[0].id);
-            }
-
-            // Claim the signup: creates referrals row + grants 15 free credits
-            // (server-side validates email confirmation, blocks self/duplicate).
-            const { data: claim } = await supabase.rpc("claim_referral_signup", {
-              p_code: cleanReferral,
-            });
-            if ((claim as any)?.ok && (claim as any)?.credits_granted) {
-              toast.success(authT("freeCreditsAdded"));
-            }
-          }
-        } catch {}
+      if (error) throw error;
+      if (!data.session) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password: newPassword });
+        if (signInErr) throw signInErr;
       }
-
       toast.success(authT("accountCreated"));
       if (redirectUrl) navigateAfterAuth(navigate, redirectUrl, window.location.search);
-      else navigate(pathForZone("/chat", window.location.pathname));
+      else navigate("/");
     } catch (e: any) {
       toast.error(translateAuthError(e, "couldNotCreate"));
     } finally {
@@ -631,13 +535,8 @@ const AuthPage = () => {
     try {
       void verifiedResetCode;
       const normalizedEmail = email.trim().toLowerCase();
-      const { data, error } = await invokeAuth({
-        action: "update-password",
-        email: normalizedEmail,
-        password: newPassword,
-      });
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw new Error(error.message);
-      if (!data?.success) throw new Error(data?.error || "Failed to update password");
 
       const { error: signInErr } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
@@ -645,7 +544,7 @@ const AuthPage = () => {
       });
       if (signInErr) throw signInErr;
       toast.success(authT("passwordUpdated"));
-      navigate(pathForZone("/chat", window.location.pathname));
+      navigate("/");
     } catch (e: any) {
       toast.error(translateAuthError(e, "passwordUpdateFailed"));
     } finally {
@@ -665,7 +564,7 @@ const AuthPage = () => {
       provider: "google",
       options: {
         redirectTo: absoluteAuthRedirect(
-          redirectUrl || pathForZone("/chat", window.location.pathname),
+          redirectUrl || "/",
           window.location.search,
         ),
       },
@@ -678,7 +577,7 @@ const AuthPage = () => {
       options: {
         scopes: "read:user user:email",
         redirectTo: absoluteAuthRedirect(
-          redirectUrl || pathForZone("/chat", window.location.pathname),
+          redirectUrl || "/",
           window.location.search,
         ),
       },
