@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import AppleSignInButton from "@/components/auth/AppleSignInButton";
 import { supabase } from "@/integrations/supabase/legacyClient";
-import { invokeFunction } from "@/lib/supabaseFunction";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft, ArrowRight, Check, Play } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
