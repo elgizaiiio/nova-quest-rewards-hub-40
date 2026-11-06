@@ -64,6 +64,9 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers,
   });
   const body = await res.json().catch(() => ({}));
+  // The server no longer accepts this sign-in (expired or from an old backend):
+  // drop it locally so the app returns to the sign-in screen instead of failing.
+  if (res.status === 401) void supabase.auth.signOut({ scope: "local" });
   if (!res.ok)
     throw new AgentApiError(
       res.status,
