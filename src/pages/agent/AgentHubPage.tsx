@@ -124,6 +124,18 @@ export default function AgentHubPage({ demo = false }: { demo?: boolean }) {
     if (!userId || demo) return;
     setLocal(loadHubLocal(userId));
     setStorageReady(true);
+    let active = true;
+    const refreshGroups = () => {
+      void agentApi.groups().then((groups) => {
+        if (!active) return;
+        setLocal((current) => ({ ...current, groups: [...current.groups.filter((g) => g.id.startsWith("group-")), ...groups] }));
+      }).catch(() => {});
+    };
+    refreshGroups();
+    const timer = window.setInterval(refreshGroups, 5000);
+    const onChange = () => { refreshGroups(); void loadWorkspace(true); };
+    window.addEventListener("ceyo-workspace-changed", onChange);
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener("ceyo-workspace-changed", onChange); };
   }, [userId, demo]);
 
   const updateLocal = useCallback((recipe: (current: HubLocalState) => HubLocalState) => {
@@ -223,7 +235,8 @@ export default function AgentHubPage({ demo = false }: { demo?: boolean }) {
       const payload = { name: value.name, description: `${members.length} coordinated bots`, prompt: groupPrompt(value.name, members), color: "rose" as const };
       const result = initial ? await agentApi.updateAgent(initial.coordinatorId, payload) : await agentApi.createAgent(payload);
       if (initial) workspace.updateAgent(result.agent); else workspace.addAgent(result.agent);
-      const group = makeGroup({ id: initial?.id, createdAt: initial?.createdAt, name: value.name, coordinatorId: result.agent.id, memberIds: value.memberIds, category: value.category });
+      const draft = makeGroup({ id: initial?.id, createdAt: initial?.createdAt, name: value.name, coordinatorId: result.agent.id, memberIds: value.memberIds, category: value.category });
+      const group = await agentApi.saveGroup(draft);
       updateLocal((current) => ({ ...current, groups: [...current.groups.filter((item) => item.id !== group.id), group] }));
       openChat("group", group.id, false);
     } catch (error) {
