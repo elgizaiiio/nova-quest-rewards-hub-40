@@ -414,7 +414,7 @@ export function HubChat({
         onPointerUp={() => { swipeStart.current = null; setSwipe(0); }}
         onPointerCancel={() => { swipeStart.current = null; setSwipe(0); }}
       >
-        {empty ? (
+        {empty && !s.running && !starting ? (
           <div className="cx-empty">{(s.loading || starting) && <HubSpinner label={ar ? "لحظة…" : "One moment…"} />}</div>
         ) : (
           <div className="cx-column" style={{ transform: swipe ? `translateX(${ar ? -swipe : swipe}px)` : undefined, transition: swipe ? "none" : undefined }}>
@@ -444,7 +444,7 @@ export function HubChat({
                     </div>
                   ) : (
                     <div className="cx-row cx-row-agent">
-                      <div className="cx-avatar"><BotAvatar agent={b.speaker!} size={22} state={b.turnIndex === s.turns.length - 1 && b.lastPart ? orb : "idle"} /></div>
+                      <div className="cx-avatar"><BotAvatar agent={b.speaker || agent} size={22} state="idle" /></div>
                       <div className="cx-agent-body">
                         {(group || b.partIndex === 0) && <span className="cx-author" dir="auto">{b.speaker?.name || title}</span>}
                         {b.partIndex === 0 && b.turn.steps?.some((step: any) => step.kind !== "thought") && <StepTimeline steps={b.turn.steps.filter((step: any) => step.kind !== "thought")} lang={lang} />}

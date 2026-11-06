@@ -50,10 +50,12 @@ export function createLongTask(client: Inngest) {
 export async function backgroundReady(): Promise<boolean> {
   const key = process.env.INNGEST_SIGNING_KEY;
   if (!key) return false;
-  const response = await fetch("https://api.inngest.com/v1/functions", { headers: { Authorization: `Bearer ${key}` } });
-  if (!response.ok) return false;
-  const result = await response.json() as any;
-  return (result.data || []).some((fn: any) => String(fn.slug || fn.id || "").includes("ceyo-long-task"));
+  const url = `${process.env.APP_URL || "https://app.ceyo.si"}/api/public/inngest`;
+  const response = await fetch("https://api.inngest.com/v2/apps/ceyo/syncs", {
+    method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify({ url }),
+  });
+  if (!response.ok) { console.error(`Inngest sync unavailable [${response.status}]`); return false; }
+  return true;
 }
 export async function startLongTask(payload: { system: string; goal: string; userId: string; conversationId: string; botId: string | null; cursorAt: string }): Promise<string> {
   const key = process.env.INNGEST_EVENT_KEY;
@@ -69,10 +71,4 @@ export async function startLongTask(payload: { system: string; goal: string; use
   const result = await response.json() as any;
   await supabaseAdmin.from("agent_jobs").update({ event_id: result.ids?.[0] || null }).eq("id", job.id);
   return job.id;
-}
-export async function longTaskStatus(eventId: string): Promise<{ done: boolean; ok: boolean; text: string }> {
-  const response = await fetch(`https://api.inngest.com/v1/events/${encodeURIComponent(eventId)}/runs`, { headers: { Authorization: `Bearer ${process.env.INNGEST_SIGNING_KEY}` } });
-  if (!response.ok) throw new Error(`Job status unavailable (${response.status})`);
-  const run = ((await response.json()) as any).data?.[0];
-  return { done: ["Completed", "Failed", "Cancelled"].includes(run?.status), ok: run?.status === "Completed", text: String(run?.output?.text || "") };
 }
