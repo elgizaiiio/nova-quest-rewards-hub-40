@@ -680,9 +680,10 @@ html[data-ceyo-surface="bot"] .agent-hub.ceyo-page{--ceyo-page-bg:#1b1b20;--ceyo
 .cx-call>*:first-child,.cx-call>*:first-child *{border:0!important;filter:none!important}
 .cx-call>*:first-child::before,.cx-call>*:first-child::after{display:none!important}
 /* Smaller composer */
-.cx-composer{min-height:44px;padding:3px;border-radius:24px}
-.cx-composer textarea{padding:7px 4px;font-size:15px}
-.cx-composer .cx-circle{width:34px;height:34px}
+.cx-composer{min-height:40px;padding:3px;border-radius:22px}
+.cx-composer textarea{padding:5px 4px;font-size:15px;overflow-y:auto;scrollbar-width:none}
+.cx-composer textarea::-webkit-scrollbar{display:none;width:0;height:0}
+.cx-composer .cx-circle{width:32px;height:32px}
 .cx-composer .cx-circle svg{width:17px;height:17px}
 
 /* ---------- markdown documents (legal + docs) ---------- */

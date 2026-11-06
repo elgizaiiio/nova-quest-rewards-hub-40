@@ -106,7 +106,7 @@ async function startReply(sessionId: string) {
   })();
 }
 
-async function addUserMessage(sessionId: string, text: string, images: string[] = [], messageId = crypto.randomUUID()) {
+async function addUserMessage(sessionId: string, text: string, images: string[] = [], messageId: string = crypto.randomUUID()) {
   const user = await uid();
   const { data, error } = await db.from("messages").insert({ id: messageId, conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } }).select("id, created_at").single();
   if (error) fail(error);
@@ -159,6 +159,17 @@ export const agentApi = {
     const primary = prof?.primary_bot_id ?? null;
     return { agents: (bots ?? []).map((b: any) => toAgent(b, primary)), tier: "free" as const, models: [] as MediaModelInfo[] };
   },
+  groups: async () => {
+    const user = await uid();
+    const { data, error } = await db.from("bot_groups").select("*,bot_group_members(bot_id,position)").eq("owner_id", user).order("created_at");
+    if (error) fail(error);
+    return (data ?? []).filter((g: any) => g.coordinator_id).map((g: any) => ({ id: g.id, name: g.name, coordinatorId: g.coordinator_id, category: g.category, createdAt: g.created_at, memberIds: (g.bot_group_members || []).sort((a: any, b: any) => a.position - b.position).map((m: any) => m.bot_id) }));
+  },
+  saveGroup: async (g: { id?: string; name: string; coordinatorId: string; memberIds: string[]; category: string }) => {
+    const { data, error } = await db.rpc("save_bot_group", { p_name: g.name, p_coordinator: g.coordinatorId, p_members: g.memberIds, p_category: g.category, p_id: g.id?.startsWith("group-") ? null : g.id || null });
+    if (error) fail(error);
+    return { ...g, id: data.id, createdAt: data.created_at };
+  },
   createAgent: async (a: { name: string; description: string; prompt: string; color: AgentColor }) => {
     const user = await uid();
     const { data, error } = await db.from("bots").insert({ owner_id: user, ...agentInput(a) }).select("*").single();
@@ -183,7 +194,8 @@ export const agentApi = {
   },
   createSession: async (p: { agentId?: string; text: string; images?: string[]; messageId?: string }) => {
     const user = await uid();
-    const { data, error } = await db.from("conversations").insert({ user_id: user, bot_id: p.agentId || null, title: p.text.slice(0, 60) || "New chat" }).select("*").single();
+    const { data: group } = await db.from("bot_groups").select("id").eq("owner_id", user).eq("coordinator_id", p.agentId || "").maybeSingle();
+    const { data, error } = await db.from("conversations").insert({ user_id: user, bot_id: p.agentId || null, group_id: group?.id || null, title: p.text.slice(0, 60) || "New chat" }).select("*").single();
     if (error) fail(error);
     await addUserMessage(data.id, p.text, p.images, p.messageId);
     return { session: { ...toSession(data), status: "running" } as SessionInfo };
@@ -219,7 +231,8 @@ export const agentApi = {
       }
     }
     const live = running.get(id);
-    return { events, status: live ? "running" : "idle" };
+    const ids = new Set(events.map((event) => event.id));
+    return { events: [...events, ...(live?.events || []).filter((event) => !ids.has(event.id))], status: live ? "running" : "idle" };
   },
   send: (id: string, text: string, images?: string[], messageId?: string) => addUserMessage(id, text, images, messageId),
   interrupt: async (id: string) => {
