@@ -1,4 +1,4 @@
-.cz{--cz-bg:oklch(0.975 0.003 80);--cz-fg:oklch(0.22 0.01 60);--cz-muted:oklch(0.55 0.01 60);--cz-card:oklch(1 0 0);--cz-line:oklch(0.91 0.005 70);--cz-accent:oklch(0.9 0.06 75);--cz-accent-fg:oklch(0.35 0.08 60);
+.cz{--cz-bg:oklch(0.14 0 0);--cz-fg:oklch(0.97 0 0);--cz-muted:oklch(0.68 0 0);--cz-card:oklch(0.19 0 0);--cz-line:oklch(0.3 0 0);--cz-accent:oklch(0.28 0 0);--cz-accent-fg:oklch(0.95 0 0);
  min-height:100dvh;background:var(--cz-bg) !important;color:var(--cz-fg) !important;font-family:"IBM Plex Sans Arabic","Plus Jakarta Sans",system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
 .cz .cz-top{display:flex;justify-content:space-between;align-items:center;padding:18px 22px}
 .cz .cz-logo{font-weight:700;font-size:22px;letter-spacing:-.02em}
