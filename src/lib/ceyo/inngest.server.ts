@@ -5,8 +5,7 @@ import { runAgentLoop } from "@/lib/ceyo/agentLoop.server";
 export const inngest = new Inngest({ id: "ceyo" });
 
 export const ceyoLongTask = inngest.createFunction(
-  { id: "ceyo-long-task", retries: 1 },
-  { event: "ceyo/long.task" },
+  { id: "ceyo-long-task", retries: 1, triggers: [{ event: "ceyo/long.task" }] },
   async ({ event, step }) => {
     const p = event.data as { system: string; goal: string };
     const text = await step.run("work", async () => {
