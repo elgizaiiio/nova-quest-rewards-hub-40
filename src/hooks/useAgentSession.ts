@@ -25,7 +25,9 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
       const ids = new Set(r.events.map((e) => e.id));
       // A history request can finish before a just-sent message is persisted.
       const retained = previous.filter((e) => e.type === "user.message" && !ids.has(e.id));
-      const next = [...r.events, ...retained];
+      // Never replace an active stream with an older database snapshot.
+      const live = previous.filter((e) => e.type !== "user.message" && !ids.has(e.id));
+      const next = r.status === "running" && previous.length ? [...previous, ...r.events.filter((e) => !previous.some((p) => p.id === e.id))] : [...r.events, ...retained, ...(r.status === "running" ? live : [])];
       seen.current = new Set(next.map((e) => e.id));
       return next;
     });
@@ -66,6 +68,7 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
             sid,
             (e) => {
               retry = 0;
+              if (!e.id || seen.current.has(e.id)) return;
               if (e.type === "session.status_running") setRunning(true);
               if (e.type === "session.status_idle" || e.type === "session.error") {
                 setRunning(false);
@@ -75,7 +78,6 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
                   void loadRequests(sid);
                 }, 600);
               }
-              if (!e.id || seen.current.has(e.id)) return;
               seen.current.add(e.id);
               setEvents((prev) => [...prev, e]);
             },
@@ -100,7 +102,7 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
     const sid = sidRef.current;
     if (!sid) return;
     const optimistic: RawEvent = {
-      id: `pending-${crypto.randomUUID()}`, type: "user.message", at: new Date().toISOString(),
+      id: crypto.randomUUID(), type: "user.message", at: new Date().toISOString(),
       content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))],
     };
     seen.current.add(optimistic.id);
@@ -108,13 +110,14 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
     setError(null);
     setRunning(true);
     try {
-      const saved = await agentApi.send(sid, text, images);
+      const saved = await agentApi.send(sid, text, images, optimistic.id);
       if (sidRef.current !== sid) return;
       seen.current.delete(optimistic.id);
       seen.current.add(saved.id);
       setEvents((previous) => previous.flatMap((event) => {
+        if (event.id === optimistic.id) return [{ ...saved, id: optimistic.id }];
         if (event.id === saved.id) return [];
-        return [event.id === optimistic.id ? saved : event];
+        return [event];
       }));
     } catch (e: any) {
       if (sidRef.current !== sid) return;

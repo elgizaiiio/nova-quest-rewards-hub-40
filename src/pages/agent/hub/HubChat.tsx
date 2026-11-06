@@ -269,10 +269,11 @@ export function HubChat({
 
   const startConversation = async (text: string) => {
     if (demo) return;
-    setFirstMessage({ id: `first-${crypto.randomUUID()}`, text, at: new Date().toISOString(), sessionId: null });
+    const messageId = crypto.randomUUID();
+    setFirstMessage({ id: messageId, text, at: new Date().toISOString(), sessionId: null });
     setStarting(true);
     try {
-      const result = await agentApi.createSession({ agentId: agent.id, text });
+      const result = await agentApi.createSession({ agentId: agent.id, text, messageId });
       workspace.upsertSession(result.session);
       setFirstMessage((pending) => pending ? { ...pending, sessionId: result.session.id } : null);
       onSession(result.session.id);
@@ -440,7 +441,7 @@ export function HubChat({
                       <div className="cx-avatar"><BotAvatar agent={b.speaker!} size={22} state={b.turnIndex === s.turns.length - 1 && b.lastPart ? orb : "idle"} /></div>
                       <div className="cx-agent-body">
                         {(group || b.partIndex === 0) && <span className="cx-author" dir="auto">{b.speaker?.name || title}</span>}
-                        {b.partIndex === 0 && b.turn.steps?.length > 0 && <StepTimeline steps={b.turn.steps} lang={lang} />}
+                        {b.partIndex === 0 && b.turn.steps?.some((step: any) => step.kind !== "thought") && <StepTimeline steps={b.turn.steps.filter((step: any) => step.kind !== "thought")} lang={lang} />}
                         {b.lastPart && b.turn.cards?.filter((c: any) => c.kind === "plan").map((c: any) => <PlanCard key={c.id} title={c.title} steps={c.steps} lang={lang} />)}
                         {b.text && (
                           <div className="cx-bubble cx-bubble-agent" data-hit={hit} data-select={selectable === b.key} dir="auto" {...handlers}>

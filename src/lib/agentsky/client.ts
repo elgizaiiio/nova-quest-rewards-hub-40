@@ -106,9 +106,9 @@ async function startReply(sessionId: string) {
   })();
 }
 
-async function addUserMessage(sessionId: string, text: string, images: string[] = []) {
+async function addUserMessage(sessionId: string, text: string, images: string[] = [], messageId = crypto.randomUUID()) {
   const user = await uid();
-  const { data, error } = await db.from("messages").insert({ conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } }).select("id, created_at").single();
+  const { data, error } = await db.from("messages").insert({ id: messageId, conversation_id: sessionId, user_id: user, role: "user", content: text, metadata: { images } }).select("id, created_at").single();
   if (error) fail(error);
   const live = running.get(sessionId);
   const e: RawEvent = { id: data.id, type: "user.message", at: data.created_at, content: [{ type: "text", text }, ...images.map((url) => ({ type: "image", source: { type: "url", url } }))] };
@@ -181,11 +181,11 @@ export const agentApi = {
     if (error) fail(error);
     return { sessions: (data ?? []).map(toSession) };
   },
-  createSession: async (p: { agentId?: string; text: string; images?: string[] }) => {
+  createSession: async (p: { agentId?: string; text: string; images?: string[]; messageId?: string }) => {
     const user = await uid();
     const { data, error } = await db.from("conversations").insert({ user_id: user, bot_id: p.agentId || null, title: p.text.slice(0, 60) || "New chat" }).select("*").single();
     if (error) fail(error);
-    await addUserMessage(data.id, p.text, p.images);
+    await addUserMessage(data.id, p.text, p.images, p.messageId);
     return { session: { ...toSession(data), status: "running" } as SessionInfo };
   },
   session: async (id: string) => {
@@ -221,7 +221,7 @@ export const agentApi = {
     const live = running.get(id);
     return { events, status: live ? "running" : "idle" };
   },
-  send: (id: string, text: string, images?: string[]) => addUserMessage(id, text, images),
+  send: (id: string, text: string, images?: string[], messageId?: string) => addUserMessage(id, text, images, messageId),
   interrupt: async (id: string) => {
     running.get(id)?.ctl.abort();
     return { status: "idle" };
