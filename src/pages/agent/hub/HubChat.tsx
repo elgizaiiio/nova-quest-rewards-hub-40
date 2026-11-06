@@ -41,6 +41,8 @@ import { orbStateFor, type AgentTurn } from "@/lib/agentsky/transcript";
 import { groupTranscript, type AgentGroup } from "./hubStorage";
 import { BotAvatar, HubSpinner, type HubLang } from "./HubParts";
 import { readReactions, writeReactions, REACTIONS } from "./chatPrefs";
+import { IntegrationApprovalCard } from "@/components/agent/IntegrationApprovalCard";
+import { onSessionChanged } from "@/lib/agentsky/client";
 
 type Bubble = {
   key: string;
@@ -462,7 +464,8 @@ export function HubChat({
                           if (card.kind === "question") return <ChoiceCard key={card.id} question={card.question} options={card.options} allowFreeText={card.allowFreeText} answered={card.answered} ar={ar} onAnswer={(v) => s.send(v)} />;
                           if (card.kind === "widget") {
                             const d = (card.data || {}) as Record<string, any>;
-                            if (card.name === "connect_app") return <ConnectAppsCard key={card.id} apps={readConnectApps(d)} title={d.title || d.question} ar={ar} onAuthorize={() => nav("/settings/apps")} />;
+                            if (card.name === "connect_app") return <ConnectAppsCard key={card.id} apps={readConnectApps(d)} title={d.title || d.question} ar={ar} onAuthorize={(app) => nav(`/settings/apps/${encodeURIComponent(app.id || app.name.toLowerCase())}`)} />;
+                            if (card.name === "integration_approval") return <IntegrationApprovalCard key={card.id} data={d} onDone={() => window.dispatchEvent(new Event("ceyo-action-completed"))} />;
                             if (card.name === "secret" || card.name === "api_key") return <SecretCard key={card.id} name={String(d.name || d.title || "API key")} ar={ar} onOpen={() => nav("/settings/vault")} />;
                             if (card.name === "question" || card.name === "option_picker") {
                               const opts = (Array.isArray(d.options) ? d.options : Array.isArray(d.choices) ? d.choices : []).map((o: any) => typeof o === "string" ? o : String(o?.label ?? o?.name ?? o?.title ?? "")).filter(Boolean);

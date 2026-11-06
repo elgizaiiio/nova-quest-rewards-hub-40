@@ -97,6 +97,11 @@ export function useAgentSession(sessionId: string | null, lang: Lang) {
 
   // A background job finished for this chat: show its result.
   useEffect(() => onSessionChanged((sid) => { if (sid === sidRef.current) void reload(sid).catch(() => {}); }), [reload]);
+  useEffect(() => {
+    const refresh = () => { const sid = sidRef.current; if (sid) void reload(sid).catch(() => {}); };
+    window.addEventListener("ceyo-action-completed", refresh);
+    return () => window.removeEventListener("ceyo-action-completed", refresh);
+  }, [reload]);
 
   const sendNow = useCallback(async (text: string, images: string[] = []) => {
     const sid = sidRef.current;
